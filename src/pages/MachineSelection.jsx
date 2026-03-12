@@ -64,7 +64,7 @@ export default function MachineSelection() {
 
     const handleMachineSelect = (machine) => {
         setSelectedMachine(machine);
-        const normalizedRole = normalizeRole(user?.role);
+        const normalizedRole = normalizeRole(currentUser?.role);
         if (normalizedRole === ROLE_IDS.MACHINE_OPERATOR) {
             const autoShift = detectCurrentShift(shifts);
             if (autoShift) {
