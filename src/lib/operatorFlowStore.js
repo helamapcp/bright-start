@@ -492,6 +492,7 @@ export const useOperatorFlowStore = () => {
           userName,
           location: request.sourceLocation,
           action: 'Separation completed',
+          eventType: 'separation_completed',
           timestamp,
         }),
         ...(prev.transferEvents || []),
