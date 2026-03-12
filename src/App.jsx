@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/sonner';
 import { queryClientInstance } from '@/lib/query-client';
 import { pagesConfig } from './pages.config';
 import PageNotFound from './lib/PageNotFound';
