@@ -70,6 +70,9 @@ export default function StockOperatorFlowPanel() {
     notes: '',
   });
 
+  const [selectedTransferId, setSelectedTransferId] = useState('');
+  const [mixerDrafts, setMixerDrafts] = useState({});
+
   const { data: formulacoes = [] } = useQuery({
     queryKey: ['formulacoes'],
     queryFn: () => base44.entities.Formulacao.filter({ ativo: true }),
