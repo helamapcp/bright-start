@@ -73,6 +73,36 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
     setDraft({ bagCode: '', producedKg: '', rawMaterialName: '', rawMaterialKg: '', notes: '' });
   };
 
+  const exportBagTraceability = () => {
+    const rows = scopedRecords.map((record) => ({
+      bag_code: record.bagCode,
+      op_number: record.opNumber,
+      machine: record.machineCode || record.machineName || '—',
+      produced_kg: formatNumber(record.producedKg),
+      raw_material_used: (record.rawMaterials || [])
+        .map((material) => `${material.name} (${formatNumber(material.kg)}kg)`)
+        .join('; '),
+      timestamp: record.createdAt,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'bag-traceability', sheetName: 'BagTraceability', rows });
+    exportRowsToPdf({
+      filePrefix: 'bag-traceability',
+      title: 'Bag Traceability Records',
+      columns: [
+        { key: 'bag_code', label: 'Bag code' },
+        { key: 'op_number', label: 'OP number' },
+        { key: 'machine', label: 'Machine' },
+        { key: 'produced_kg', label: 'Produced kg' },
+        { key: 'raw_material_used', label: 'Raw material' },
+        { key: 'timestamp', label: 'Timestamp' },
+      ],
+      rows,
+    });
+
+    toast.success('Bag traceability exported (PDF + Excel).');
+  };
+
   return (
     <Card>
       <CardHeader>
