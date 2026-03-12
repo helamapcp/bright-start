@@ -80,7 +80,8 @@ export default function MachineSelection() {
     };
 
     const handleLogout = () => {
-        base44.auth.logout();
+        clearFrontendAuthSession();
+        navigate('/login', { replace: true });
     };
 
     const getMachineSession = (machineId) => {
