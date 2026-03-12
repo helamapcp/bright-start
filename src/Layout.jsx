@@ -131,7 +131,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
           <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
-            Voltar ao preview
+            Ir para login
           </Button>
         </div>
       </aside>
