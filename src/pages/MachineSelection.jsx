@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Factory, RefreshCw, LogOut, Clock } from "lucide-react";
+import { Search, Factory, RefreshCw, Clock } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import MachineCard from "@/components/production/MachineCard";
 import ShiftSelector from "@/components/production/ShiftSelector";
 import { cn } from "@/lib/utils";
 import { normalizeRole, ROLE_IDS, getRoleLabel } from '@/lib/rbac';
 import { useUsersStore } from '@/lib/userStore';
-import { clearFrontendAuthSession } from '@/lib/frontendAuth';
 
 // Identifica turno atual baseado na hora
 function detectCurrentShift(shifts) {
