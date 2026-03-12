@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
 import { canAccessPage } from '@/lib/rbac';
 import { useUsersStore } from '@/lib/userStore';
+import { isFrontendAuthenticated } from '@/lib/frontendAuth';
 
 // Frontend-only mode role defaults for route redirects.
 export const HOME_BY_ROLE = {
@@ -18,6 +19,26 @@ export const HOME_BY_ROLE = {
 export default function RouteGuard({ children, pageName }) {
   const { currentUser } = useUsersStore();
   const fallbackPage = HOME_BY_ROLE[currentUser?.role] || 'Dashboard';
+
+  if (!isFrontendAuthenticated()) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Authentication required</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">Sign in with a test user to continue.</p>
+              <Button asChild>
+                <Link to="/login">Go to login</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (!canAccessPage(currentUser?.role, pageName)) {
     return (
