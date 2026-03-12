@@ -726,7 +726,17 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Transfer requests and generated OPs</CardTitle>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="text-base">Transfer requests and generated OPs</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={exportTransferRequests}>
+                <Download className="w-4 h-4 mr-2" /> Export transfers
+              </Button>
+              <Button size="sm" variant="outline" onClick={exportProductionOps}>
+                <Download className="w-4 h-4 mr-2" /> Export OPs
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table>
@@ -746,10 +756,13 @@ export default function StockOperatorFlowPanel() {
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No transfer requests yet.</TableCell>
                 </TableRow>
               ) : (
-                transferRequests.map((request) => {
+                transferRequests.flatMap((request) => {
                   const existingOrder = separationOrders.find((order) => order.requestId === request.id);
-                  return (
-                    <TableRow key={request.id}>
+                  const timelineEvents = getTransferTimeline(request.id);
+                  const isOpen = selectedTransferId === request.id;
+
+                  return [
+                    <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedTransferId(isOpen ? '' : request.id)}>
                       <TableCell className="font-medium">{request.opNumber}</TableCell>
                       <TableCell>{request.sourceLocation} → {request.destinationLocation}</TableCell>
                       <TableCell>{request.mixer} / {request.shift}</TableCell>
@@ -759,14 +772,27 @@ export default function StockOperatorFlowPanel() {
                       </TableCell>
                       <TableCell className="text-right">
                         {!existingOrder && request.status !== 'completed' && (
-                          <Button size="sm" variant="outline" onClick={() => handleOpenSeparation(request.id)}>
+                          <Button size="sm" variant="outline" onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenSeparation(request.id);
+                          }}>
                             Generate separation
                           </Button>
                         )}
                         {existingOrder && <Badge variant="outline">SO: {existingOrder.id.slice(0, 6)}</Badge>}
                       </TableCell>
-                    </TableRow>
-                  );
+                    </TableRow>,
+                    isOpen ? (
+                      <TableRow key={`${request.id}-timeline`}>
+                        <TableCell colSpan={6} className="bg-muted/50">
+                          <div className="space-y-2 p-2">
+                            <p className="text-xs font-medium">Transfer timeline</p>
+                            <TransferTimeline events={timelineEvents} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : null,
+                  ];
                 })
               )}
             </TableBody>
