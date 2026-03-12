@@ -127,6 +127,11 @@ export default function PATracking() {
   };
 
   const confirmTransfer = (item) => {
+    if (!canManageLogistics) {
+      toast.error('Your role has read-only access in Logistics.');
+      return;
+    }
+
     const qty = Number(transferDrafts[item.id]);
     if (!Number.isFinite(qty) || qty <= 0) {
       toast.error('Informe uma quantidade válida para transferir.');
