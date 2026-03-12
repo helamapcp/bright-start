@@ -4,12 +4,20 @@ import { appendSystemLog } from '@/lib/systemLog';
 const FLOW_STORAGE_KEY = 'frontend-operator-flow-v1';
 const PMP_SCHEDULING_STORAGE_KEY = 'frontend-pmp-scheduling-v1';
 
+const DEFAULT_MIXER_CONFIGS = {
+  'misturador 1': { mixerName: 'Misturador 1', mode: 'operation', maxKg: 500 },
+  'misturador 2': { mixerName: 'Misturador 2', mode: 'operation', maxKg: 700 },
+  'misturador 3': { mixerName: 'Misturador 3', mode: 'batch', maxKg: 300 },
+};
+
 const initialState = {
   receptions: [],
   transferRequests: [],
   separationOrders: [],
   generatedOps: [],
   bagTraceability: [],
+  transferEvents: [],
+  mixerConfigs: DEFAULT_MIXER_CONFIGS,
 };
 
 const parseSafe = (value, fallback) => {
@@ -22,6 +30,8 @@ const parseSafe = (value, fallback) => {
 };
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
+
+const normalizeLocation = (value) => normalize(value).normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
 const makeId = (prefix = 'flow') => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -37,9 +47,15 @@ const toDayKey = (dateLike) => {
 const readState = () => {
   if (typeof window === 'undefined') return initialState;
   const parsed = parseSafe(window.localStorage.getItem(FLOW_STORAGE_KEY), initialState);
+  const parsedMixerConfigs = parsed?.mixerConfigs && typeof parsed.mixerConfigs === 'object' ? parsed.mixerConfigs : {};
+
   return {
     ...initialState,
     ...(parsed && typeof parsed === 'object' ? parsed : {}),
+    mixerConfigs: {
+      ...DEFAULT_MIXER_CONFIGS,
+      ...parsedMixerConfigs,
+    },
   };
 };
 
@@ -88,6 +104,31 @@ const flattenPlanning = (planningByDay) =>
       if (a.dayKey !== b.dayKey) return a.dayKey.localeCompare(b.dayKey);
       return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
     });
+
+const buildTransferEvent = ({ requestId, userName, action, location, details, timestamp }) => ({
+  id: makeId('evt'),
+  requestId,
+  timestamp: timestamp || new Date().toISOString(),
+  userName: userName || 'Frontend Local',
+  action,
+  location,
+  details: details || '',
+});
+
+const sumTotals = (materials = []) => {
+  const totalKg = materials.reduce(
+    (sum, item) => sum + Number(item.newlyDrawnKg || item.requiredKg || 0),
+    0
+  );
+  const totalRequiredKg = materials.reduce((sum, item) => sum + Number(item.requiredKg || 0), 0);
+  const totalSacks = materials.reduce((sum, item) => sum + Number(item.newSacks || 0), 0);
+
+  return {
+    totalKg: Number(totalKg.toFixed(2)),
+    totalRequiredKg: Number(totalRequiredKg.toFixed(2)),
+    totalSacks,
+  };
+};
 
 export const computeScheduledSuggestions = ({ formulacoes = [], materiais = [], targetDayKey }) => {
   const planningByDay = readPlanning();
@@ -143,21 +184,20 @@ export const computeScheduledSuggestions = ({ formulacoes = [], materiais = [], 
 
     if (line.dayKey !== targetDayKey) return;
 
-    const totalKg = materials.reduce((sum, item) => sum + item.newlyDrawnKg, 0);
-    const totalSacks = materials.reduce((sum, item) => sum + item.newSacks, 0);
+    const { totalKg, totalSacks } = sumTotals(materials);
 
     suggestions.push({
       id: line.id,
       dayKey: line.dayKey,
       formulationId: line.formulationId,
       formulationName: formulacao.nome || formulacao.material_final || 'Formulação',
-      mixer: line.mixer || 'Misturador',
+      mixer: line.mixer || 'Misturador 1',
       shift: line.shift || '2',
       sourceLocation: line.sourceLocation || 'PCP',
       destinationLocation: 'PMP',
       batches: batchCount,
       materials,
-      totalKg: Number(totalKg.toFixed(2)),
+      totalKg,
       totalSacks,
     });
   });
@@ -175,6 +215,17 @@ export const useOperatorFlowStore = () => {
   const nextOpNumber = () => {
     const next = (state.generatedOps?.length || 0) + 1;
     return `OP-PMP-${String(next).padStart(5, '0')}`;
+  };
+
+  const getMixerRule = (mixerName) => {
+    const key = normalize(mixerName);
+    const fromState = state.mixerConfigs?.[key];
+    if (fromState) return fromState;
+    return {
+      mixerName: mixerName || 'Misturador',
+      mode: 'operation',
+      maxKg: 500,
+    };
   };
 
   const addReception = ({ materialName, quantityKg, quantitySacks, sackKg, notes, userName = 'Frontend Local' }) => {
@@ -225,10 +276,27 @@ export const useOperatorFlowStore = () => {
       expectedPmpLeftoverKg: Number(item.expectedPmpLeftoverKg || 0),
     }));
 
-    const totalKg = normalizedMaterials.reduce((sum, item) => sum + Number(item.newlyDrawnKg || item.requiredKg || 0), 0);
-    const totalSacks = normalizedMaterials.reduce((sum, item) => sum + Number(item.newSacks || 0), 0);
-
+    const { totalKg, totalRequiredKg, totalSacks } = sumTotals(normalizedMaterials);
     const opNumber = nextOpNumber();
+
+    const isPcpToPmp = normalizeLocation(sourceLocation) === 'pcp' && normalizeLocation(destinationLocation) === 'pmp';
+    if (isPcpToPmp) {
+      const mixerRule = getMixerRule(mixer);
+      const parsedMaxKg = Number(mixerRule?.maxKg || 0);
+      if (Number.isFinite(parsedMaxKg) && parsedMaxKg > 0) {
+        const batchCount = Number(batches || 1);
+        const perBatchKg = batchCount > 0 ? totalRequiredKg / batchCount : totalRequiredKg;
+        const exceeds = mixerRule.mode === 'batch' ? perBatchKg > parsedMaxKg : totalRequiredKg > parsedMaxKg;
+
+        if (exceeds) {
+          const measuredKg = mixerRule.mode === 'batch' ? perBatchKg : totalRequiredKg;
+          const label = mixerRule.mode === 'batch' ? 'por batelada' : 'por operação';
+          throw new Error(
+            `Capacity exceeded for ${mixerRule.mixerName}: ${measuredKg.toFixed(2)}kg > ${parsedMaxKg.toFixed(2)}kg (${label}).`
+          );
+        }
+      }
+    }
 
     const transferRequest = {
       id: makeId('trf'),
@@ -241,7 +309,8 @@ export const useOperatorFlowStore = () => {
       batches: Number(batches || 1),
       formulationName: formulationName || 'Transferência manual',
       materials: normalizedMaterials,
-      totalKg: Number(totalKg.toFixed(2)),
+      totalKg,
+      totalRequiredKg,
       totalSacks,
       status: 'pending',
       notes: String(notes || '').trim(),
@@ -262,10 +331,26 @@ export const useOperatorFlowStore = () => {
       createdAt: new Date().toISOString(),
     };
 
+    const transferEvents = [
+      buildTransferEvent({
+        requestId: transferRequest.id,
+        userName,
+        location: `${sourceLocation}→${destinationLocation}`,
+        action: 'Transfer request created',
+      }),
+      buildTransferEvent({
+        requestId: transferRequest.id,
+        userName,
+        location: destinationLocation,
+        action: `OP generated (${op.opNumber})`,
+      }),
+    ];
+
     setState((prev) => ({
       ...prev,
       transferRequests: [transferRequest, ...(prev.transferRequests || [])],
       generatedOps: [op, ...(prev.generatedOps || [])],
+      transferEvents: [...transferEvents, ...(prev.transferEvents || [])],
     }));
 
     appendSystemLog({
@@ -309,12 +394,28 @@ export const useOperatorFlowStore = () => {
       createdAt: new Date().toISOString(),
     };
 
+    const transferEvents = [
+      buildTransferEvent({
+        requestId,
+        userName,
+        location: request.sourceLocation,
+        action: `Separation order generated (${order.id.slice(0, 8)})`,
+      }),
+      buildTransferEvent({
+        requestId,
+        userName,
+        location: request.sourceLocation,
+        action: 'Separation started',
+      }),
+    ];
+
     setState((prev) => ({
       ...prev,
       separationOrders: [order, ...(prev.separationOrders || [])],
       transferRequests: (prev.transferRequests || []).map((item) =>
         item.id === requestId ? { ...item, status: 'separation_open' } : item
       ),
+      transferEvents: [...transferEvents, ...(prev.transferEvents || [])],
     }));
 
     appendSystemLog({
@@ -370,14 +471,26 @@ export const useOperatorFlowStore = () => {
       }
     });
 
+    const timestamp = new Date().toISOString();
+
     setState((prev) => ({
       ...prev,
       separationOrders: (prev.separationOrders || []).map((item) =>
-        item.id === orderId ? { ...item, status: 'completed', completedAt: new Date().toISOString() } : item
+        item.id === orderId ? { ...item, status: 'completed', completedAt: timestamp } : item
       ),
       transferRequests: (prev.transferRequests || []).map((item) =>
-        item.id === order.requestId ? { ...item, status: 'completed', completedAt: new Date().toISOString() } : item
+        item.id === order.requestId ? { ...item, status: 'completed', completedAt: timestamp } : item
       ),
+      transferEvents: [
+        buildTransferEvent({
+          requestId: request.id,
+          userName,
+          location: request.sourceLocation,
+          action: 'Separation completed',
+          timestamp,
+        }),
+        ...(prev.transferEvents || []),
+      ],
     }));
 
     appendSystemLog({
@@ -392,6 +505,120 @@ export const useOperatorFlowStore = () => {
     });
 
     return { order, request };
+  };
+
+  const appendTransferEvent = ({ requestId, action, location, userName, details, timestamp }) => {
+    if (!requestId || !action) return;
+
+    setState((prev) => ({
+      ...prev,
+      transferEvents: [
+        buildTransferEvent({
+          requestId,
+          action,
+          location,
+          userName,
+          details,
+          timestamp,
+        }),
+        ...(prev.transferEvents || []),
+      ],
+    }));
+  };
+
+  const setMixerCapacity = ({ mixerName, maxKg, mode = 'operation' }) => {
+    const key = normalize(mixerName);
+    const parsed = Number(maxKg || 0);
+    if (!key) throw new Error('Mixer name is required.');
+    if (!Number.isFinite(parsed) || parsed <= 0) throw new Error('Mixer capacity must be greater than zero.');
+    if (mode !== 'operation' && mode !== 'batch') throw new Error('Invalid mixer capacity mode.');
+
+    setState((prev) => ({
+      ...prev,
+      mixerConfigs: {
+        ...(prev.mixerConfigs || {}),
+        [key]: {
+          mixerName: mixerName.trim(),
+          maxKg: Number(parsed.toFixed(2)),
+          mode,
+        },
+      },
+    }));
+  };
+
+  const getTransferTimeline = (requestId) =>
+    (state.transferEvents || [])
+      .filter((event) => event.requestId === requestId)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  const validateFlowConsistency = (stockSummaryByLocation = {}) => {
+    const issues = [];
+
+    (state.transferRequests || []).forEach((request) => {
+      const requestMaterials = Array.isArray(request.materials) ? request.materials : [];
+      const expectedSacks = requestMaterials.reduce((sum, item) => sum + Number(item.newSacks || 0), 0);
+      const expectedKg = requestMaterials.reduce((sum, item) => sum + Number(item.newlyDrawnKg || item.requiredKg || 0), 0);
+
+      if (Math.abs(expectedSacks - Number(request.totalSacks || 0)) > 0.01) {
+        issues.push(`Request ${request.opNumber}: total sacks mismatch.`);
+      }
+
+      if (Math.abs(expectedKg - Number(request.totalKg || 0)) > 0.1) {
+        issues.push(`Request ${request.opNumber}: total kg mismatch.`);
+      }
+
+      requestMaterials.forEach((material) => {
+        const expectedFromSacks = Number(material.newSacks || 0) * Number(material.sackKg || 25);
+        if (Math.abs(expectedFromSacks - Number(material.newlyDrawnKg || 0)) > 0.1) {
+          issues.push(`Request ${request.opNumber}: sack-to-kg mismatch for ${material.materialName}.`);
+        }
+        if (Number(material.expectedPmpLeftoverKg || 0) < -0.1) {
+          issues.push(`Request ${request.opNumber}: negative PMP leftover for ${material.materialName}.`);
+        }
+      });
+
+      if (request.status === 'completed') {
+        const hasCompletedOrder = (state.separationOrders || []).some(
+          (order) => order.requestId === request.id && order.status === 'completed'
+        );
+        if (!hasCompletedOrder) {
+          issues.push(`Request ${request.opNumber}: completed without a completed separation order.`);
+        }
+      }
+    });
+
+    (state.separationOrders || []).forEach((order) => {
+      (order.lines || []).forEach((line) => {
+        const expectedKg = Number(line.dispatchSacks || 0) * Number(line.sackKg || 25);
+        if (Math.abs(expectedKg - Number(line.dispatchKg || 0)) > 0.1) {
+          issues.push(`Order ${order.id.slice(0, 8)}: dispatch kg mismatch for ${line.materialName}.`);
+        }
+      });
+    });
+
+    const opSet = new Set((state.generatedOps || []).map((op) => op.opNumber));
+    (state.bagTraceability || []).forEach((record) => {
+      if (!record.opNumber || !opSet.has(record.opNumber)) {
+        issues.push(`Bag ${record.bagCode || record.id}: missing valid OP link.`);
+      }
+      if (!record.machineId) {
+        issues.push(`Bag ${record.bagCode || record.id}: missing machine link.`);
+      }
+    });
+
+    ['CD', 'PCP', 'PMP', 'FÁBRICA'].forEach((location) => {
+      const locationSummary = stockSummaryByLocation?.[location];
+      const total = Number(locationSummary?.totalQuantity || 0);
+      if (Number.isFinite(total) && total < -0.1) {
+        issues.push(`Stock balance is negative in ${location}.`);
+      }
+    });
+
+    return {
+      ok: issues.length === 0,
+      issues,
+      checkedAt: new Date().toISOString(),
+    };
   };
 
   const addBagTraceability = (payload) => {
@@ -435,7 +662,11 @@ export const useOperatorFlowStore = () => {
     updateSeparationLine,
     completeSeparationOrder,
     addBagTraceability,
+    appendTransferEvent,
+    setMixerCapacity,
+    getTransferTimeline,
+    validateFlowConsistency,
   };
 };
 
-export { FLOW_STORAGE_KEY, PMP_SCHEDULING_STORAGE_KEY };
+export { FLOW_STORAGE_KEY, PMP_SCHEDULING_STORAGE_KEY, DEFAULT_MIXER_CONFIGS };

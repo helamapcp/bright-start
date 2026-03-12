@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { useUsersStore } from '@/lib/userStore';
 import { useInventoryStore } from '@/lib/inventoryStore';
 import { computeScheduledSuggestions, useOperatorFlowStore } from '@/lib/operatorFlowStore';
+import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import TransferTimeline from '@/components/estoque/TransferTimeline';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Boxes, ClipboardList, PackagePlus, RefreshCw, Route, Workflow } from 'lucide-react';
+import { AlertTriangle, Boxes, ClipboardList, Download, PackagePlus, RefreshCw, Route, Workflow } from 'lucide-react';
 
 const toDayKey = (dateLike) => {
   const date = new Date(dateLike);
@@ -34,11 +36,16 @@ export default function StockOperatorFlowPanel() {
     separationOrders,
     openSeparationOrders,
     bagTraceability,
+    mixerConfigs,
     addReception,
     createTransferRequest,
     createSeparationOrder,
     updateSeparationLine,
     completeSeparationOrder,
+    appendTransferEvent,
+    setMixerCapacity,
+    getTransferTimeline,
+    validateFlowConsistency,
   } = useOperatorFlowStore();
 
   const [selectedDayKey, setSelectedDayKey] = useState(toDayKey(new Date()));
@@ -63,6 +70,9 @@ export default function StockOperatorFlowPanel() {
     notes: '',
   });
 
+  const [selectedTransferId, setSelectedTransferId] = useState('');
+  const [mixerDrafts, setMixerDrafts] = useState({});
+
   const { data: formulacoes = [] } = useQuery({
     queryKey: ['formulacoes'],
     queryFn: () => base44.entities.Formulacao.filter({ ativo: true }),
@@ -76,6 +86,16 @@ export default function StockOperatorFlowPanel() {
   const scheduledSuggestions = useMemo(
     () => computeScheduledSuggestions({ formulacoes, materiais, targetDayKey: selectedDayKey }),
     [formulacoes, materiais, selectedDayKey]
+  );
+
+  const mixerConfigList = useMemo(
+    () => Object.values(mixerConfigs || {}).sort((a, b) => String(a.mixerName).localeCompare(String(b.mixerName))),
+    [mixerConfigs]
+  );
+
+  const consistencyReport = useMemo(
+    () => validateFlowConsistency(summaryByLocation),
+    [summaryByLocation, validateFlowConsistency, transferRequests, separationOrders, generatedOps, bagTraceability]
   );
 
   const summaryCards = [
@@ -139,21 +159,25 @@ export default function StockOperatorFlowPanel() {
   };
 
   const createScheduledTransfer = (suggestion) => {
-    createTransferRequest({
-      kind: 'scheduled',
-      sourceLocation: suggestion.sourceLocation,
-      destinationLocation: suggestion.destinationLocation,
-      dayKey: suggestion.dayKey,
-      mixer: suggestion.mixer,
-      shift: suggestion.shift,
-      batches: suggestion.batches,
-      formulationName: suggestion.formulationName,
-      materials: suggestion.materials,
-      notes: `Programação PMP ${suggestion.dayKey}`,
-      userName: currentUser?.full_name,
-    });
+    try {
+      createTransferRequest({
+        kind: 'scheduled',
+        sourceLocation: suggestion.sourceLocation,
+        destinationLocation: suggestion.destinationLocation,
+        dayKey: suggestion.dayKey,
+        mixer: suggestion.mixer,
+        shift: suggestion.shift,
+        batches: suggestion.batches,
+        formulationName: suggestion.formulationName,
+        materials: suggestion.materials,
+        notes: `Programação PMP ${suggestion.dayKey}`,
+        userName: currentUser?.full_name,
+      });
 
-    toast.success(`Transfer + OP generated for ${suggestion.formulationName}.`);
+      toast.success(`Transfer + OP generated for ${suggestion.formulationName}.`);
+    } catch (error) {
+      toast.error(error.message || 'Could not generate scheduled transfer.');
+    }
   };
 
   const createManualTransfer = () => {
@@ -167,32 +191,36 @@ export default function StockOperatorFlowPanel() {
     const kg = manualDraft.unit === 'sacks' ? qty * sackKg : qty;
     const newSacks = manualDraft.unit === 'sacks' ? qty : Math.ceil(kg / sackKg);
 
-    createTransferRequest({
-      kind: 'manual',
-      sourceLocation: manualDraft.sourceLocation,
-      destinationLocation: manualDraft.destinationLocation,
-      dayKey: selectedDayKey,
-      mixer: manualDraft.mixer,
-      shift: manualDraft.shift,
-      formulationName: 'Transferência manual',
-      materials: [
-        {
-          materialKey: manualDraft.materialValue.split('::')[0],
-          materialName,
-          sackKg,
-          requiredKg: kg,
-          fromLeftoverKg: 0,
-          newSacks,
-          newlyDrawnKg: newSacks * sackKg,
-          expectedPmpLeftoverKg: Number((newSacks * sackKg - kg).toFixed(2)),
-        },
-      ],
-      notes: manualDraft.notes,
-      userName: currentUser?.full_name,
-    });
+    try {
+      createTransferRequest({
+        kind: 'manual',
+        sourceLocation: manualDraft.sourceLocation,
+        destinationLocation: manualDraft.destinationLocation,
+        dayKey: selectedDayKey,
+        mixer: manualDraft.mixer,
+        shift: manualDraft.shift,
+        formulationName: 'Transferência manual',
+        materials: [
+          {
+            materialKey: manualDraft.materialValue.split('::')[0],
+            materialName,
+            sackKg,
+            requiredKg: kg,
+            fromLeftoverKg: 0,
+            newSacks,
+            newlyDrawnKg: newSacks * sackKg,
+            expectedPmpLeftoverKg: Number((newSacks * sackKg - kg).toFixed(2)),
+          },
+        ],
+        notes: manualDraft.notes,
+        userName: currentUser?.full_name,
+      });
 
-    toast.success('Manual transfer request created.');
-    setManualDraft((prev) => ({ ...prev, materialValue: '', quantity: '', notes: '' }));
+      toast.success('Manual transfer request created.');
+      setManualDraft((prev) => ({ ...prev, materialValue: '', quantity: '', notes: '' }));
+    } catch (error) {
+      toast.error(error.message || 'Could not create manual transfer request.');
+    }
   };
 
   const handleOpenSeparation = (requestId) => {
@@ -217,11 +245,152 @@ export default function StockOperatorFlowPanel() {
         });
       });
 
+      const now = new Date().toISOString();
+      appendTransferEvent({
+        requestId: request.id,
+        action: `Stock transfer posted (${request.sourceLocation} → ${request.destinationLocation})`,
+        location: `${request.sourceLocation}→${request.destinationLocation}`,
+        userName: currentUser?.full_name,
+        timestamp: now,
+      });
+      appendTransferEvent({
+        requestId: request.id,
+        action: `Materials received at destination (${request.destinationLocation})`,
+        location: request.destinationLocation,
+        userName: currentUser?.full_name,
+        timestamp: now,
+      });
+
       completeSeparationOrder(order.id, currentUser?.full_name);
       toast.success('Separation completed and stock transfer posted.');
     } catch (error) {
       toast.error(error.message || 'Could not complete separation order.');
     }
+  };
+
+  const updateMixerDraft = (mixerName, patch) => {
+    setMixerDrafts((prev) => ({
+      ...prev,
+      [mixerName]: {
+        ...(prev[mixerName] || {}),
+        ...patch,
+      },
+    }));
+  };
+
+  const saveMixerConfig = (config) => {
+    const draft = mixerDrafts[config.mixerName] || {};
+    const nextMaxKg = draft.maxKg ?? config.maxKg;
+    const nextMode = draft.mode ?? config.mode;
+
+    try {
+      setMixerCapacity({
+        mixerName: config.mixerName,
+        maxKg: nextMaxKg,
+        mode: nextMode,
+      });
+      toast.success(`Mixer ${config.mixerName} capacity updated.`);
+    } catch (error) {
+      toast.error(error.message || 'Could not update mixer capacity.');
+    }
+  };
+
+  const exportTransferRequests = () => {
+    const rows = transferRequests.map((request) => ({
+      transfer_id: request.id,
+      op_number: request.opNumber,
+      source_location: request.sourceLocation,
+      destination_location: request.destinationLocation,
+      materials: (request.materials || [])
+        .map((line) => `${line.materialName} (${formatNumber(line.newlyDrawnKg || line.requiredKg)}kg)`)
+        .join('; '),
+      quantities_kg: formatNumber(request.totalKg),
+      quantities_sacks: request.totalSacks,
+      status: request.status,
+      created_at: request.createdAt,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'transfer-requests', sheetName: 'TransferRequests', rows });
+    exportRowsToPdf({
+      filePrefix: 'transfer-requests',
+      title: 'Transfer Requests',
+      columns: [
+        { key: 'transfer_id', label: 'Transfer ID' },
+        { key: 'source_location', label: 'Source' },
+        { key: 'destination_location', label: 'Destination' },
+        { key: 'materials', label: 'Materials' },
+        { key: 'quantities_kg', label: 'Total kg' },
+        { key: 'op_number', label: 'OP' },
+        { key: 'status', label: 'Status' },
+        { key: 'created_at', label: 'Created' },
+      ],
+      rows,
+    });
+    toast.success('Transfer Requests exported (PDF + Excel).');
+  };
+
+  const exportSeparationOrders = () => {
+    const rows = separationOrders.map((order) => {
+      const request = transferRequests.find((item) => item.id === order.requestId);
+      return {
+        order_id: order.id,
+        request_id: order.requestId,
+        requested_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.requestedSacks || 0), 0),
+        dispatched_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.dispatchSacks || 0), 0),
+        justifications: (order.lines || [])
+          .filter((line) => line.justification)
+          .map((line) => `${line.materialName}: ${line.justification}`)
+          .join(' | '),
+        operator: currentUser?.full_name || 'Frontend Local',
+        timestamp: order.completedAt || order.createdAt,
+        op_number: request?.opNumber || '—',
+      };
+    });
+
+    exportRowsToExcel({ filePrefix: 'separation-orders', sheetName: 'SeparationOrders', rows });
+    exportRowsToPdf({
+      filePrefix: 'separation-orders',
+      title: 'Separation Orders',
+      columns: [
+        { key: 'order_id', label: 'Order ID' },
+        { key: 'requested_sacks', label: 'Requested sacks' },
+        { key: 'dispatched_sacks', label: 'Dispatched sacks' },
+        { key: 'justifications', label: 'Justifications' },
+        { key: 'operator', label: 'Operator' },
+        { key: 'timestamp', label: 'Timestamp' },
+        { key: 'op_number', label: 'OP' },
+      ],
+      rows,
+    });
+    toast.success('Separation Orders exported (PDF + Excel).');
+  };
+
+  const exportProductionOps = () => {
+    const rows = generatedOps.map((op) => ({
+      op_number: op.opNumber,
+      mixer: op.mixer,
+      shift: op.shift,
+      formulation: op.formulationName,
+      total_kg: formatNumber(op.totalKg),
+      created_at: op.createdAt,
+      status: op.status,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'production-ops', sheetName: 'ProductionOPs', rows });
+    exportRowsToPdf({
+      filePrefix: 'production-ops',
+      title: 'Production OPs',
+      columns: [
+        { key: 'op_number', label: 'OP number' },
+        { key: 'mixer', label: 'Mixer' },
+        { key: 'shift', label: 'Shift' },
+        { key: 'formulation', label: 'Formulation' },
+        { key: 'total_kg', label: 'Total kg' },
+        { key: 'created_at', label: 'Created' },
+      ],
+      rows,
+    });
+    toast.success('Production OPs exported (PDF + Excel).');
   };
 
   return (
@@ -244,6 +413,78 @@ export default function StockOperatorFlowPanel() {
           );
         })}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">End-to-end flow validation</CardTitle>
+          <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            {consistencyReport.ok ? (
+              <Badge variant="secondary">Flow consistent</Badge>
+            ) : (
+              <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Issues found</Badge>
+            )}
+            <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
+          </div>
+          {!consistencyReport.ok && (
+            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-1">
+              {consistencyReport.issues.map((issue) => (
+                <p key={issue} className="text-muted-foreground">• {issue}</p>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mixer capacity rules (PMP)</CardTitle>
+          <CardDescription>Requests PCP → PMP are blocked if OP load exceeds configured capacity.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {mixerConfigList.map((config) => {
+            const draft = mixerDrafts[config.mixerName] || {};
+            const maxKg = draft.maxKg ?? config.maxKg;
+            const mode = draft.mode ?? config.mode;
+
+            return (
+              <div key={config.mixerName} className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-md border border-border p-3">
+                <div>
+                  <Label>Mixer</Label>
+                  <Input value={config.mixerName} readOnly />
+                </div>
+                <div>
+                  <Label>Max capacity (kg)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={maxKg}
+                    onChange={(event) => updateMixerDraft(config.mixerName, { maxKg: event.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Rule mode</Label>
+                  <Select value={mode} onValueChange={(value) => updateMixerDraft(config.mixerName, { mode: value })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="operation">Per operation</SelectItem>
+                      <SelectItem value="batch">Per batch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button variant="outline" className="w-full" onClick={() => saveMixerConfig(config)}>
+                    Save rule
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -485,7 +726,17 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Transfer requests and generated OPs</CardTitle>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="text-base">Transfer requests and generated OPs</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={exportTransferRequests}>
+                <Download className="w-4 h-4 mr-2" /> Export transfers
+              </Button>
+              <Button size="sm" variant="outline" onClick={exportProductionOps}>
+                <Download className="w-4 h-4 mr-2" /> Export OPs
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table>
@@ -505,10 +756,13 @@ export default function StockOperatorFlowPanel() {
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No transfer requests yet.</TableCell>
                 </TableRow>
               ) : (
-                transferRequests.map((request) => {
+                transferRequests.flatMap((request) => {
                   const existingOrder = separationOrders.find((order) => order.requestId === request.id);
-                  return (
-                    <TableRow key={request.id}>
+                  const timelineEvents = getTransferTimeline(request.id);
+                  const isOpen = selectedTransferId === request.id;
+
+                  return [
+                    <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedTransferId(isOpen ? '' : request.id)}>
                       <TableCell className="font-medium">{request.opNumber}</TableCell>
                       <TableCell>{request.sourceLocation} → {request.destinationLocation}</TableCell>
                       <TableCell>{request.mixer} / {request.shift}</TableCell>
@@ -518,14 +772,27 @@ export default function StockOperatorFlowPanel() {
                       </TableCell>
                       <TableCell className="text-right">
                         {!existingOrder && request.status !== 'completed' && (
-                          <Button size="sm" variant="outline" onClick={() => handleOpenSeparation(request.id)}>
+                          <Button size="sm" variant="outline" onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenSeparation(request.id);
+                          }}>
                             Generate separation
                           </Button>
                         )}
                         {existingOrder && <Badge variant="outline">SO: {existingOrder.id.slice(0, 6)}</Badge>}
                       </TableCell>
-                    </TableRow>
-                  );
+                    </TableRow>,
+                    isOpen ? (
+                      <TableRow key={`${request.id}-timeline`}>
+                        <TableCell colSpan={6} className="bg-muted/50">
+                          <div className="space-y-2 p-2">
+                            <p className="text-xs font-medium">Transfer timeline</p>
+                            <TransferTimeline events={timelineEvents} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : null,
+                  ];
                 })
               )}
             </TableBody>
@@ -535,8 +802,15 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Separation orders with justified adjustment</CardTitle>
-          <CardDescription>Adjust dispatched sacks per line; changed quantities require justification.</CardDescription>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <CardTitle className="text-base">Separation orders with justified adjustment</CardTitle>
+              <CardDescription>Adjust dispatched sacks per line; changed quantities require justification.</CardDescription>
+            </div>
+            <Button size="sm" variant="outline" onClick={exportSeparationOrders}>
+              <Download className="w-4 h-4 mr-2" /> Export separation orders
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {openSeparationOrders.length === 0 && (

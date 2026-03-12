@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOperatorFlowStore } from '@/lib/operatorFlowStore';
+import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
 
@@ -71,10 +73,45 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
     setDraft({ bagCode: '', producedKg: '', rawMaterialName: '', rawMaterialKg: '', notes: '' });
   };
 
+  const exportBagTraceability = () => {
+    const rows = scopedRecords.map((record) => ({
+      bag_code: record.bagCode,
+      op_number: record.opNumber,
+      machine: record.machineCode || record.machineName || '—',
+      produced_kg: formatNumber(record.producedKg),
+      raw_material_used: (record.rawMaterials || [])
+        .map((material) => `${material.name} (${formatNumber(material.kg)}kg)`)
+        .join('; '),
+      timestamp: record.createdAt,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'bag-traceability', sheetName: 'BagTraceability', rows });
+    exportRowsToPdf({
+      filePrefix: 'bag-traceability',
+      title: 'Bag Traceability Records',
+      columns: [
+        { key: 'bag_code', label: 'Bag code' },
+        { key: 'op_number', label: 'OP number' },
+        { key: 'machine', label: 'Machine' },
+        { key: 'produced_kg', label: 'Produced kg' },
+        { key: 'raw_material_used', label: 'Raw material' },
+        { key: 'timestamp', label: 'Timestamp' },
+      ],
+      rows,
+    });
+
+    toast.success('Bag traceability exported (PDF + Excel).');
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Machine traceability by OP and bag</CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base">Machine traceability by OP and bag</CardTitle>
+          <Button size="sm" variant="outline" onClick={exportBagTraceability}>
+            <Download className="w-4 h-4 mr-2" /> Export traceability
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -157,7 +194,7 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
                     <TableCell><Badge variant="secondary">{record.opNumber}</Badge></TableCell>
                     <TableCell>{formatNumber(record.producedKg)} kg</TableCell>
                     <TableCell>
-                      {(record.rawMaterials || []).map((material) => `${material.name} (${formatNumber(material.kg)}kg`).join(', ')}
+                      {(record.rawMaterials || []).map((material) => `${material.name} (${formatNumber(material.kg)}kg)`).join(', ')}
                     </TableCell>
                     <TableCell>{new Date(record.createdAt).toLocaleString('pt-BR')}</TableCell>
                   </TableRow>
