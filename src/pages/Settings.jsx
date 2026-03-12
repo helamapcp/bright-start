@@ -1332,6 +1332,95 @@ export default function Settings() {
                     <TabsContent value="usuarios">
                         <GestaoUsuarios />
                     </TabsContent>
+
+                    {/* Log Tab */}
+                    <TabsContent value="log">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Log do Sistema</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                                    <div className="md:col-span-2">
+                                        <Input
+                                            value={logSearch}
+                                            onChange={(e) => setLogSearch(e.target.value)}
+                                            placeholder="Buscar em ação, usuário, local e parâmetros"
+                                        />
+                                    </div>
+                                    <Select value={logUserFilter} onValueChange={setLogUserFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Usuário" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos usuários</SelectItem>
+                                            {logUsers.map((user) => (
+                                                <SelectItem key={user} value={user}>{user}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={logActionFilter} onValueChange={setLogActionFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Ação" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas ações</SelectItem>
+                                            {['create', 'update', 'delete', 'add', 'edit', 'adjustment', 'transfer', 'delivered', 'auth'].map((action) => (
+                                                <SelectItem key={action} value={action}>{action}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={logLocationFilter} onValueChange={setLogLocationFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Local" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos locais</SelectItem>
+                                            {logLocations.map((location) => (
+                                                <SelectItem key={location} value={location}>{location}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input type="date" value={logDateFrom} onChange={(e) => setLogDateFrom(e.target.value)} />
+                                        <Input type="date" value={logDateTo} onChange={(e) => setLogDateTo(e.target.value)} />
+                                    </div>
+                                </div>
+
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Data/Hora</TableHead>
+                                            <TableHead>Usuário</TableHead>
+                                            <TableHead>Ação</TableHead>
+                                            <TableHead>Local</TableHead>
+                                            <TableHead>Parâmetros</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredLogs.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                    Nenhum registro encontrado com os filtros atuais.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : filteredLogs.map((log) => (
+                                            <TableRow key={log.id}>
+                                                <TableCell>{new Date(log.timestamp).toLocaleString('pt-BR')}</TableCell>
+                                                <TableCell>{log.user_name || '—'}</TableCell>
+                                                <TableCell>
+                                                    <div className="space-y-1">
+                                                        <Badge variant="outline">{log.action_type || 'action'}</Badge>
+                                                        <p className="text-sm">{log.action}</p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{log.location || '—'}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    <pre className="whitespace-pre-wrap break-words font-mono text-xs">
+                                                        {JSON.stringify(log.parameters || {}, null, 2)}
+                                                    </pre>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 </Tabs>
 
                 {/* Modal máquina/turno/parada/refugo */}
