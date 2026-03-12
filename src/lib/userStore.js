@@ -91,8 +91,8 @@ const persistUsers = (users) => {
 };
 
 const readCurrentUserId = () => {
-  if (typeof window === 'undefined') return 'local-user-1';
-  return window.localStorage.getItem(ACTIVE_USER_STORAGE_KEY) || 'local-user-1';
+  if (typeof window === 'undefined') return 'local-user-admin';
+  return window.localStorage.getItem(ACTIVE_USER_STORAGE_KEY) || 'local-user-admin';
 };
 
 const persistCurrentUserId = (userId) => {
