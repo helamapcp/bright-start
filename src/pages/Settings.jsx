@@ -1288,7 +1288,7 @@ export default function Settings() {
                             <DialogTitle>{getModalTitle()}</DialogTitle>
                         </DialogHeader>
                         {activeTab === 'machines' && (
-                            <MachineForm machine={editingItem} onSave={handleSave} onCancel={() => setShowModal(false)} />
+                            <MachineForm machine={editingItem} categories={machineCategories} onSave={handleSave} onCancel={() => setShowModal(false)} />
                         )}
                         {activeTab === 'shifts' && (
                             <ShiftForm shift={editingItem} onSave={handleSave} onCancel={() => setShowModal(false)} />
