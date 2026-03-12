@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
     ArrowLeft, Square, AlertTriangle, Trash2, Package,
-    CheckCircle, Scale, Plus, Clock, RotateCcw
+    CheckCircle, Scale, Plus, Clock, RotateCcw, Truck
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { cn } from "@/lib/utils";
@@ -554,19 +554,45 @@ export default function Production() {
                                 </Badge>
                             )}
                         </div>
-                        {session && (
-                            <Button variant="outline" size="sm"
-                                onClick={() => endSession.mutate()} disabled={endSession.isPending}
-                                className="text-red-600 border-red-200 hover:bg-red-50 h-10">
-                                <Square className="w-4 h-4 mr-2" />
-                                Encerrar Sessão
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(createPageUrl('PATracking'))}
+                                className="h-10"
+                            >
+                                <Truck className="w-4 h-4 mr-2" />
+                                Ir para PA
                             </Button>
-                        )}
+                            {session && (
+                                <Button variant="outline" size="sm"
+                                    onClick={() => endSession.mutate()} disabled={endSession.isPending}
+                                    className="text-red-600 border-red-200 hover:bg-red-50 h-10">
+                                    <Square className="w-4 h-4 mr-2" />
+                                    Encerrar Sessão
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+                <Card>
+                    <CardContent className="p-3">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <span className="font-medium">Fluxo:</span>
+                            <Button size="sm" variant="secondary" onClick={() => navigate(createPageUrl('Orders'))}>OP</Button>
+                            <span className="text-muted-foreground">→</span>
+                            <Button size="sm" variant="secondary" onClick={() => navigate(createPageUrl('MachineSelection'))}>Produção</Button>
+                            <span className="text-muted-foreground">→</span>
+                            <Button size="sm" onClick={() => navigate(createPageUrl('PATracking'))}>PA</Button>
+                            <span className="text-muted-foreground">→</span>
+                            <Button size="sm" variant="outline" onClick={() => navigate(createPageUrl('FactoryDashboard'))}>Logística</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Alertas */}
                 {weightSampleRequired && session && (
                     <Alert className="border-amber-400 bg-amber-50">
