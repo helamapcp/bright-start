@@ -43,7 +43,8 @@ import {
 } from "@/components/ui/table";
 import {
     Plus, Edit, Trash2, Factory, Clock, AlertTriangle,
-    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical, ClipboardList
+    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical, ClipboardList,
+    ChevronRight, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -61,6 +62,7 @@ const UNIDADES_POR_CATEGORIA = {
 const TIPO_DADO_LABEL = { string: 'Texto', number: 'Número', select: 'Lista', boolean: 'Sim/Não' };
 
 const MACHINE_CATEGORY_STORAGE_KEY = 'settings-machine-categories-v1';
+const MACHINE_CATEGORY_COLLAPSE_STORAGE_KEY = 'settings-machine-categories-collapsed-v1';
 const DEFAULT_MACHINE_CATEGORIES = [
     { id: 'cat-extrusora', name: 'extrusora' },
     { id: 'cat-injetora', name: 'injetora' },
@@ -438,6 +440,7 @@ export default function Settings() {
     const [editingCategoryId, setEditingCategoryId] = useState(null);
     const [editingCategoryName, setEditingCategoryName] = useState('');
     const [categoryToDelete, setCategoryToDelete] = useState(null);
+    const [collapsedMachineCategories, setCollapsedMachineCategories] = useState({});
 
     const { logs: systemLogs, users: logUsers } = useSystemLogs();
     const [logSearch, setLogSearch] = useState('');
@@ -588,9 +591,21 @@ export default function Settings() {
         }
     }, []);
 
+
     useEffect(() => {
-        localStorage.setItem(MACHINE_CATEGORY_STORAGE_KEY, JSON.stringify(machineCategories));
-    }, [machineCategories]);
+        try {
+            const raw = sessionStorage.getItem(MACHINE_CATEGORY_COLLAPSE_STORAGE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') setCollapsedMachineCategories(parsed);
+        } catch {
+            // ignore malformed session storage
+        }
+    }, []);
+
+    useEffect(() => {
+        sessionStorage.setItem(MACHINE_CATEGORY_COLLAPSE_STORAGE_KEY, JSON.stringify(collapsedMachineCategories));
+    }, [collapsedMachineCategories]);
 
     const addMachineCategory = () => {
         const name = newMachineCategory.trim();
@@ -684,9 +699,37 @@ export default function Settings() {
         toast.success('Categoria removida!');
     };
 
-    const getCategoryUsageCount = (categoryName) => (
-        machines.filter((machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)).length
-    );
+
+    const groupedMachines = useMemo(() => {
+        const categoryNames = Array.from(new Set([
+            ...machineCategories.map((category) => category.name),
+            ...machines.map((machine) => machine.type).filter(Boolean),
+        ]));
+
+        return categoryNames.map((categoryName) => ({
+            categoryName,
+            machines: machines.filter(
+                (machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)
+            ),
+        }));
+    }, [machineCategories, machines]);
+
+    useEffect(() => {
+        setCollapsedMachineCategories((prev) => {
+            const next = { ...prev };
+            groupedMachines.forEach(({ categoryName }) => {
+                if (!(categoryName in next)) next[categoryName] = true;
+            });
+            return next;
+        });
+    }, [groupedMachines]);
+
+    const toggleMachineCategoryCollapse = (categoryName) => {
+        setCollapsedMachineCategories((prev) => ({
+            ...prev,
+            [categoryName]: !prev[categoryName],
+        }));
+    };
 
     const logLocations = useMemo(() => {
         const unique = new Set(systemLogs.map((log) => log.location).filter(Boolean));
@@ -982,40 +1025,61 @@ export default function Settings() {
                                         Nova Máquina
                                     </Button>
                                 </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Código</TableHead>
-                                                <TableHead>Nome</TableHead>
-                                                <TableHead>Categoria</TableHead>
-                                                <TableHead>Setor</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Ações</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {machines.map(m => (
-                                                <TableRow key={m.id}>
-                                                    <TableCell className="font-semibold">{m.code}</TableCell>
-                                                    <TableCell>{m.name}</TableCell>
-                                                    <TableCell className="capitalize">{m.type}</TableCell>
-                                                    <TableCell>{m.sector}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline">{m.status}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
-                                                            <Trash2 className="w-4 h-4 text-red-500" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                <CardContent className="space-y-3">
+                                    {groupedMachines.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">Nenhuma máquina cadastrada.</p>
+                                    ) : groupedMachines.map(({ categoryName, machines: categoryMachines }) => {
+                                        const isCollapsed = collapsedMachineCategories[categoryName] !== false;
+                                        return (
+                                            <div key={categoryName} className="rounded-md border border-border overflow-hidden">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleMachineCategoryCollapse(categoryName)}
+                                                    className="w-full flex items-center justify-between px-4 py-3 text-left bg-muted/40 hover:bg-muted transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                        <span className="font-medium capitalize">{categoryName}</span>
+                                                    </div>
+                                                    <Badge variant="secondary">{categoryMachines.length}</Badge>
+                                                </button>
+
+                                                {!isCollapsed && (
+                                                    <div className="p-2 md:p-3">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>Código</TableHead>
+                                                                    <TableHead>Nome</TableHead>
+                                                                    <TableHead>Setor</TableHead>
+                                                                    <TableHead>Status</TableHead>
+                                                                    <TableHead className="text-right">Ações</TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {categoryMachines.map((m) => (
+                                                                    <TableRow key={m.id}>
+                                                                        <TableCell className="font-semibold">{m.code}</TableCell>
+                                                                        <TableCell>{m.name}</TableCell>
+                                                                        <TableCell>{m.sector}</TableCell>
+                                                                        <TableCell><Badge variant="outline">{m.status}</Badge></TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
+                                                                                <Edit className="w-4 h-4" />
+                                                                            </Button>
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                                                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                                            </Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </CardContent>
                             </Card>
                         </div>
