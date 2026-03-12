@@ -105,12 +105,13 @@ const flattenPlanning = (planningByDay) =>
       return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
     });
 
-const buildTransferEvent = ({ requestId, userName, action, location, details, timestamp }) => ({
+const buildTransferEvent = ({ requestId, userName, action, location, details, timestamp, eventType }) => ({
   id: makeId('evt'),
   requestId,
   timestamp: timestamp || new Date().toISOString(),
   userName: userName || 'Frontend Local',
   action,
+  eventType: eventType || 'other',
   location,
   details: details || '',
 });
