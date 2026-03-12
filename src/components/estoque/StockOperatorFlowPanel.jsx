@@ -739,6 +739,46 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Advanced export presets</CardTitle>
+          <CardDescription>Use Last 7/30 days, OP, machine, material, or date range before exporting.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+          <div className="space-y-1.5">
+            <Label>Preset</Label>
+            <Select value={exportFilters.preset} onValueChange={(value) => handleExportFilterChange('preset', value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All data</SelectItem>
+                <SelectItem value="last7">Last 7 days</SelectItem>
+                <SelectItem value="last30">Last 30 days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>OP number</Label>
+            <Input value={exportFilters.opNumber} onChange={(event) => handleExportFilterChange('opNumber', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Machine / Mixer</Label>
+            <Input value={exportFilters.machine} onChange={(event) => handleExportFilterChange('machine', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Material</Label>
+            <Input value={exportFilters.material} onChange={(event) => handleExportFilterChange('material', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Start</Label>
+            <Input type="date" value={exportFilters.startDate} onChange={(event) => handleExportFilterChange('startDate', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>End</Label>
+            <Input type="date" value={exportFilters.endDate} onChange={(event) => handleExportFilterChange('endDate', event.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="transfer-requests-section">
+        <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <CardTitle className="text-base">Scheduled PCP → PMP transfers</CardTitle>
