@@ -1646,6 +1646,46 @@ export type Database = {
     Functions: {
       can_access_factory: { Args: { _factory_id: string }; Returns: boolean }
       current_tenant_id: { Args: never; Returns: string }
+      fn_create_material_reception: {
+        Args: {
+          p_batch_code: string
+          p_created_by?: string
+          p_factory_id: string
+          p_location_code?: string
+          p_material_id: string
+          p_metadata?: Json
+          p_received_at?: string
+          p_received_kg: number
+          p_supplier?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      fn_create_transfer_request: {
+        Args: {
+          p_factory_id: string
+          p_from_location_code: string
+          p_items: Json
+          p_notes?: string
+          p_requested_by?: string
+          p_tenant_id: string
+          p_to_location_code: string
+        }
+        Returns: Json
+      }
+      fn_start_production_run: {
+        Args: {
+          p_consumption_location_code?: string
+          p_created_by?: string
+          p_factory_id: string
+          p_machine_id: string
+          p_material_allocations: Json
+          p_production_order_id: string
+          p_started_at?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
