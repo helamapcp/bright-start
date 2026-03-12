@@ -46,7 +46,7 @@ import {
     Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical
 } from "lucide-react";
 import { cn } from '@/lib/utils';
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import ImportacaoMassa from "@/components/settings/ImportacaoMassa";
 import GestaoUsuarios from "@/components/settings/GestaoUsuarios";
 import MateriaPrimaTab from "@/components/settings/MateriaPrimaTab";
