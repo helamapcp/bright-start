@@ -397,7 +397,7 @@ export default function StockOperatorFlowPanel() {
           .filter((line) => line.justification)
           .map((line) => `${line.materialName}: ${line.justification}`)
           .join(' | '),
-        operator: currentUser?.full_name || 'Frontend Local',
+        operator: currentUser?.full_name || 'Operador',
         machine: request?.mixer || '—',
         timestamp: order.completedAt || order.createdAt,
         op_number: request?.opNumber || '—',
