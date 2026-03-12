@@ -699,9 +699,37 @@ export default function Settings() {
         toast.success('Categoria removida!');
     };
 
-    const getCategoryUsageCount = (categoryName) => (
-        machines.filter((machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)).length
-    );
+
+    const groupedMachines = useMemo(() => {
+        const categoryNames = Array.from(new Set([
+            ...machineCategories.map((category) => category.name),
+            ...machines.map((machine) => machine.type).filter(Boolean),
+        ]));
+
+        return categoryNames.map((categoryName) => ({
+            categoryName,
+            machines: machines.filter(
+                (machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)
+            ),
+        }));
+    }, [machineCategories, machines]);
+
+    useEffect(() => {
+        setCollapsedMachineCategories((prev) => {
+            const next = { ...prev };
+            groupedMachines.forEach(({ categoryName }) => {
+                if (!(categoryName in next)) next[categoryName] = true;
+            });
+            return next;
+        });
+    }, [groupedMachines]);
+
+    const toggleMachineCategoryCollapse = (categoryName) => {
+        setCollapsedMachineCategories((prev) => ({
+            ...prev,
+            [categoryName]: !prev[categoryName],
+        }));
+    };
 
     const logLocations = useMemo(() => {
         const unique = new Set(systemLogs.map((log) => log.location).filter(Boolean));
