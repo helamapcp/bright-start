@@ -338,12 +338,14 @@ export const useOperatorFlowStore = () => {
         userName,
         location: `${sourceLocation}→${destinationLocation}`,
         action: 'Transfer request created',
+        eventType: 'request_created',
       }),
       buildTransferEvent({
         requestId: transferRequest.id,
         userName,
         location: destinationLocation,
         action: `OP generated (${op.opNumber})`,
+        eventType: 'op_generated',
       }),
     ];
 
