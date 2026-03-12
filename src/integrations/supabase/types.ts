@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      code_sequences: {
+        Row: {
+          entity_key: string
+          last_value: number
+          updated_at: string
+        }
+        Insert: {
+          entity_key: string
+          last_value?: number
+          updated_at?: string
+        }
+        Update: {
+          entity_key?: string
+          last_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           aggregate_id: string | null
@@ -425,6 +443,7 @@ export type Database = {
       }
       production_bags: {
         Row: {
+          code: string
           created_at: string
           created_by: string | null
           factory_id: string
@@ -436,6 +455,7 @@ export type Database = {
           weight_kg: number
         }
         Insert: {
+          code: string
           created_at?: string
           created_by?: string | null
           factory_id: string
@@ -447,6 +467,7 @@ export type Database = {
           weight_kg: number
         }
         Update: {
+          code?: string
           created_at?: string
           created_by?: string | null
           factory_id?: string
@@ -916,6 +937,53 @@ export type Database = {
         }
         Relationships: []
       }
+      separation_orders: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          factory_id: string
+          id: string
+          notes: string | null
+          status: string
+          tenant_id: string
+          transfer_request_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          factory_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tenant_id: string
+          transfer_request_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          factory_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          transfer_request_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "separation_orders_transfer_request_id_fkey"
+            columns: ["transfer_request_id"]
+            isOneToOne: false
+            referencedRelation: "transfer_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_balances: {
         Row: {
           batch_id: string | null
@@ -1214,6 +1282,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          code: string
           factory_id: string
           from_location_id: string
           id: string
@@ -1227,6 +1296,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          code: string
           factory_id: string
           from_location_id: string
           id?: string
@@ -1240,6 +1310,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          code?: string
           factory_id?: string
           from_location_id?: string
           id?: string
@@ -1388,6 +1459,7 @@ export type Database = {
       }
       users: {
         Row: {
+          code: string
           created_at: string | null
           email: string
           factory_id: string | null
@@ -1397,6 +1469,7 @@ export type Database = {
           tenant_id: string | null
         }
         Insert: {
+          code: string
           created_at?: string | null
           email: string
           factory_id?: string | null
@@ -1406,6 +1479,7 @@ export type Database = {
           tenant_id?: string | null
         }
         Update: {
+          code?: string
           created_at?: string | null
           email?: string
           factory_id?: string | null
@@ -1543,6 +1617,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      next_standard_code: {
+        Args: { p_entity: string; p_pad: number; p_prefix: string }
+        Returns: string
       }
       refresh_projection_stock: {
         Args: {
