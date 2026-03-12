@@ -36,11 +36,16 @@ export default function StockOperatorFlowPanel() {
     separationOrders,
     openSeparationOrders,
     bagTraceability,
+    mixerConfigs,
     addReception,
     createTransferRequest,
     createSeparationOrder,
     updateSeparationLine,
     completeSeparationOrder,
+    appendTransferEvent,
+    setMixerCapacity,
+    getTransferTimeline,
+    validateFlowConsistency,
   } = useOperatorFlowStore();
 
   const [selectedDayKey, setSelectedDayKey] = useState(toDayKey(new Date()));
