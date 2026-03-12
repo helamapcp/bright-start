@@ -69,7 +69,8 @@ const sanitizeUsers = (users) => {
     .map((user) => ({
       id: user.id || makeId(),
       full_name: String(user.full_name),
-      email: String(user.email),
+      email: String(user.email).trim().toLowerCase(),
+      password: String(user.password || 'test123'),
       role: normalizeRole(user.role || ROLE_IDS.MACHINE_OPERATOR),
       active: user.active !== false,
     }));
