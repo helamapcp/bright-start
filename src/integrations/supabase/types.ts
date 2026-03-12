@@ -14,469 +14,1196 @@ export type Database = {
   }
   public: {
     Tables: {
-      categories: {
+      alerts: {
         Row: {
-          created_at: string | null
+          alert_type: string
+          created_at: string
+          factory_id: string
           id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      formulation_items: {
-        Row: {
-          created_at: string | null
-          formulation_id: string
-          id: string
-          product_id: string
-          quantity_per_batch: number
-          unit: string
-        }
-        Insert: {
-          created_at?: string | null
-          formulation_id: string
-          id?: string
-          product_id: string
-          quantity_per_batch?: number
-          unit?: string
-        }
-        Update: {
-          created_at?: string | null
-          formulation_id?: string
-          id?: string
-          product_id?: string
-          quantity_per_batch?: number
-          unit?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "formulation_items_formulation_id_fkey"
-            columns: ["formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "formulation_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      formulations: {
-        Row: {
-          active: boolean
-          created_at: string | null
-          final_product: string
-          id: string
-          machine: string | null
-          name: string
-          parent_formulation_id: string | null
-          updated_at: string | null
-          weight_per_batch: number
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string | null
-          final_product: string
-          id?: string
-          machine?: string | null
-          name: string
-          parent_formulation_id?: string | null
-          updated_at?: string | null
-          weight_per_batch?: number
-        }
-        Update: {
-          active?: boolean
-          created_at?: string | null
-          final_product?: string
-          id?: string
-          machine?: string | null
-          name?: string
-          parent_formulation_id?: string | null
-          updated_at?: string | null
-          weight_per_batch?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "formulations_parent_formulation_id_fkey"
-            columns: ["parent_formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      inventory_count_items: {
-        Row: {
-          counted_quantity: number
-          counted_total_kg: number
-          created_at: string | null
-          difference_kg: number
-          id: string
-          inventory_count_id: string
-          justification: string | null
-          product_id: string
-          system_quantity: number
-          system_total_kg: number
-        }
-        Insert: {
-          counted_quantity?: number
-          counted_total_kg?: number
-          created_at?: string | null
-          difference_kg?: number
-          id?: string
-          inventory_count_id: string
-          justification?: string | null
-          product_id: string
-          system_quantity?: number
-          system_total_kg?: number
-        }
-        Update: {
-          counted_quantity?: number
-          counted_total_kg?: number
-          created_at?: string | null
-          difference_kg?: number
-          id?: string
-          inventory_count_id?: string
-          justification?: string | null
-          product_id?: string
-          system_quantity?: number
-          system_total_kg?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_count_items_inventory_count_id_fkey"
-            columns: ["inventory_count_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_counts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_count_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      inventory_counts: {
-        Row: {
-          confirmed_at: string | null
-          confirmed_by: string | null
-          confirmed_by_name: string | null
-          created_at: string | null
-          created_by: string | null
-          created_by_name: string | null
-          id: string
-          location_code: string
-          notes: string | null
+          message: string
+          reference_id: string | null
+          reference_type: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
           status: string
+          tenant_id: string
+          title: string
         }
         Insert: {
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
+          alert_type: string
+          created_at?: string
+          factory_id: string
           id?: string
-          location_code: string
-          notes?: string | null
+          message: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
           status?: string
+          tenant_id: string
+          title: string
         }
         Update: {
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
+          alert_type?: string
+          created_at?: string
+          factory_id?: string
           id?: string
-          location_code?: string
-          notes?: string | null
+          message?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
           status?: string
+          tenant_id?: string
+          title?: string
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_counts_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "alerts_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
-        ]
-      }
-      inventory_logs: {
-        Row: {
-          action_type: string
-          created_at: string | null
-          from_sector: string | null
-          id: string
-          notes: string | null
-          product_id: string | null
-          product_name: string | null
-          quantity: number
-          to_sector: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Insert: {
-          action_type: string
-          created_at?: string | null
-          from_sector?: string | null
-          id?: string
-          notes?: string | null
-          product_id?: string | null
-          product_name?: string | null
-          quantity?: number
-          to_sector?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          action_type?: string
-          created_at?: string | null
-          from_sector?: string | null
-          id?: string
-          notes?: string | null
-          product_id?: string | null
-          product_name?: string | null
-          quantity?: number
-          to_sector?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "inventory_logs_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
       }
-      locations: {
+      audit_logs: {
         Row: {
-          active: boolean
-          code: string
-          created_at: string | null
-          description: string | null
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          details: Json
+          factory_id: string | null
           id: string
-          location_type: string
-          name: string
-          sort_order: number
+          resource_id: string | null
+          resource_type: string | null
+          tenant_id: string
         }
         Insert: {
-          active?: boolean
-          code: string
-          created_at?: string | null
-          description?: string | null
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          factory_id?: string | null
           id?: string
-          location_type?: string
-          name: string
-          sort_order?: number
+          resource_id?: string | null
+          resource_type?: string | null
+          tenant_id: string
         }
         Update: {
-          active?: boolean
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          factory_id?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_type?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demand_forecasts: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          factory_id: string
+          forecast_date: string
+          id: string
+          material_id: string | null
+          model_version: string | null
+          predicted_kg: number
+          tenant_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          factory_id: string
+          forecast_date: string
+          id?: string
+          material_id?: string | null
+          model_version?: string | null
+          predicted_kg?: number
+          tenant_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          factory_id?: string
+          forecast_date?: string
+          id?: string
+          material_id?: string | null
+          model_version?: string | null
+          predicted_kg?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_forecasts_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_forecasts_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_forecasts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          aggregate_id: string
+          aggregate_type: string
+          created_at: string
+          created_by: string | null
+          event_type: string
+          factory_id: string | null
+          id: string
+          payload: Json
+          tenant_id: string
+        }
+        Insert: {
+          aggregate_id: string
+          aggregate_type: string
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          factory_id?: string | null
+          id?: string
+          payload?: Json
+          tenant_id: string
+        }
+        Update: {
+          aggregate_id?: string
+          aggregate_type?: string
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          factory_id?: string | null
+          id?: string
+          payload?: Json
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factories: {
+        Row: {
+          created_at: string
+          factory_name: string
+          id: string
+          location: string | null
+          status: string
+          tenant_id: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          factory_name: string
+          id?: string
+          location?: string | null
+          status?: string
+          tenant_id: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          factory_name?: string
+          id?: string
+          location?: string | null
+          status?: string
+          tenant_id?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machine_oee_metrics: {
+        Row: {
+          availability: number
+          factory_id: string
+          id: string
+          machine_id: string
+          measured_at: string
+          oee: number
+          performance: number
+          production_run_id: string | null
+          quality: number
+          tenant_id: string
+        }
+        Insert: {
+          availability?: number
+          factory_id: string
+          id?: string
+          machine_id: string
+          measured_at?: string
+          oee?: number
+          performance?: number
+          production_run_id?: string | null
+          quality?: number
+          tenant_id: string
+        }
+        Update: {
+          availability?: number
+          factory_id?: string
+          id?: string
+          machine_id?: string
+          measured_at?: string
+          oee?: number
+          performance?: number
+          production_run_id?: string | null
+          quality?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_oee_metrics_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_oee_metrics_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_oee_metrics_production_run_id_fkey"
+            columns: ["production_run_id"]
+            isOneToOne: false
+            referencedRelation: "production_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_oee_metrics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machines: {
+        Row: {
+          code: string
+          created_at: string
+          factory_id: string
+          id: string
+          machine_type: string
+          metadata: Json
+          name: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          factory_id: string
+          id?: string
+          machine_type: string
+          metadata?: Json
+          name: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
           code?: string
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
+          factory_id?: string
           id?: string
-          location_type?: string
+          machine_type?: string
+          metadata?: Json
           name?: string
-          sort_order?: number
-        }
-        Relationships: []
-      }
-      material_excess: {
-        Row: {
-          consumed: boolean
-          consumed_by_schedule_id: string | null
-          created_at: string | null
-          excess_kg: number
-          id: string
-          location_code: string
-          product_id: string
-          production_date: string
-          source_schedule_id: string | null
-        }
-        Insert: {
-          consumed?: boolean
-          consumed_by_schedule_id?: string | null
-          created_at?: string | null
-          excess_kg?: number
-          id?: string
-          location_code: string
-          product_id: string
-          production_date: string
-          source_schedule_id?: string | null
-        }
-        Update: {
-          consumed?: boolean
-          consumed_by_schedule_id?: string | null
-          created_at?: string | null
-          excess_kg?: number
-          id?: string
-          location_code?: string
-          product_id?: string
-          production_date?: string
-          source_schedule_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "material_excess_consumed_by_schedule_id_fkey"
-            columns: ["consumed_by_schedule_id"]
+            foreignKeyName: "machines_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "production_schedules"
+            referencedRelation: "factories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "material_excess_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "machines_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
+        ]
+      }
+      material_batches: {
+        Row: {
+          batch_code: string
+          created_at: string
+          expires_at: string | null
+          factory_id: string
+          id: string
+          material_id: string
+          metadata: Json
+          received_at: string
+          received_kg: number
+          remaining_kg: number
+          supplier: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          batch_code: string
+          created_at?: string
+          expires_at?: string | null
+          factory_id: string
+          id?: string
+          material_id: string
+          metadata?: Json
+          received_at?: string
+          received_kg?: number
+          remaining_kg?: number
+          supplier?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          batch_code?: string
+          created_at?: string
+          expires_at?: string | null
+          factory_id?: string
+          id?: string
+          material_id?: string
+          metadata?: Json
+          received_at?: string
+          received_kg?: number
+          remaining_kg?: number
+          supplier?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "material_excess_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "material_batches_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "factories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "material_excess_source_schedule_id_fkey"
-            columns: ["source_schedule_id"]
+            foreignKeyName: "material_batches_material_id_fkey"
+            columns: ["material_id"]
             isOneToOne: false
-            referencedRelation: "production_schedules"
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_batches_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_consumption: {
+        Row: {
+          bag_id: string | null
+          batch_id: string | null
+          consumed_at: string
+          consumed_kg: number
+          created_at: string
+          created_by: string | null
+          factory_id: string
+          id: string
+          material_id: string
+          production_run_id: string
+          tenant_id: string
+        }
+        Insert: {
+          bag_id?: string | null
+          batch_id?: string | null
+          consumed_at?: string
+          consumed_kg: number
+          created_at?: string
+          created_by?: string | null
+          factory_id: string
+          id?: string
+          material_id: string
+          production_run_id: string
+          tenant_id: string
+        }
+        Update: {
+          bag_id?: string | null
+          batch_id?: string | null
+          consumed_at?: string
+          consumed_kg?: number
+          created_at?: string
+          created_by?: string | null
+          factory_id?: string
+          id?: string
+          material_id?: string
+          production_run_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_consumption_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "production_bags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_consumption_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "material_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_consumption_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_consumption_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_consumption_production_run_id_fkey"
+            columns: ["production_run_id"]
+            isOneToOne: false
+            referencedRelation: "production_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_consumption_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          created_at: string
+          factory_id: string
+          id: string
+          is_active: boolean
+          material_code: string
+          name: string
+          sack_weight_kg: number | null
+          tenant_id: string
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          factory_id: string
+          id?: string
+          is_active?: boolean
+          material_code: string
+          name: string
+          sack_weight_kg?: number | null
+          tenant_id: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          factory_id?: string
+          id?: string
+          is_active?: boolean
+          material_code?: string
+          name?: string
+          sack_weight_kg?: number | null
+          tenant_id?: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materials_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
       }
       mixers: {
         Row: {
-          active: boolean
           capacity_kg: number
-          created_at: string | null
+          created_at: string
           cycle_time_minutes: number
+          factory_id: string
           id: string
-          max_batches_per_day: number
           name: string
-          production_line: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
         }
         Insert: {
-          active?: boolean
           capacity_kg?: number
-          created_at?: string | null
+          created_at?: string
           cycle_time_minutes?: number
+          factory_id: string
           id?: string
-          max_batches_per_day?: number
           name: string
-          production_line?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
         }
         Update: {
-          active?: boolean
           capacity_kg?: number
-          created_at?: string | null
+          created_at?: string
           cycle_time_minutes?: number
+          factory_id?: string
           id?: string
-          max_batches_per_day?: number
           name?: string
-          production_line?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mixers_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mixers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       production_bags: {
         Row: {
-          bag_number: number
-          created_at: string | null
+          bag_code: string
+          created_at: string
           created_by: string | null
-          created_by_name: string | null
-          formulation_id: string
+          factory_id: string
           id: string
-          location_code: string
-          production_order_id: string | null
-          production_planning_id: string | null
+          location_id: string | null
+          material_id: string | null
+          production_run_id: string
+          remaining_kg: number
           status: string
-          transfer_id: string | null
-          transferred_to: string | null
+          tenant_id: string
           weight_kg: number
         }
         Insert: {
-          bag_number?: number
-          created_at?: string | null
+          bag_code: string
+          created_at?: string
           created_by?: string | null
-          created_by_name?: string | null
-          formulation_id: string
+          factory_id: string
           id?: string
-          location_code?: string
-          production_order_id?: string | null
-          production_planning_id?: string | null
+          location_id?: string | null
+          material_id?: string | null
+          production_run_id: string
+          remaining_kg?: number
           status?: string
-          transfer_id?: string | null
-          transferred_to?: string | null
+          tenant_id: string
           weight_kg?: number
         }
         Update: {
-          bag_number?: number
-          created_at?: string | null
+          bag_code?: string
+          created_at?: string
           created_by?: string | null
-          created_by_name?: string | null
-          formulation_id?: string
+          factory_id?: string
           id?: string
-          location_code?: string
-          production_order_id?: string | null
-          production_planning_id?: string | null
+          location_id?: string | null
+          material_id?: string | null
+          production_run_id?: string
+          remaining_kg?: number
           status?: string
-          transfer_id?: string | null
-          transferred_to?: string | null
+          tenant_id?: string
           weight_kg?: number
         }
         Relationships: [
           {
-            foreignKeyName: "production_bags_formulation_id_fkey"
-            columns: ["formulation_id"]
+            foreignKeyName: "production_bags_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "formulations"
+            referencedRelation: "factories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_bags_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "production_bags_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_bags_production_order_id_fkey"
+            foreignKeyName: "production_bags_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_bags_production_run_id_fkey"
+            columns: ["production_run_id"]
+            isOneToOne: false
+            referencedRelation: "production_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_bags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          factory_id: string
+          id: string
+          machine_id: string | null
+          order_number: string
+          planned_end_at: string | null
+          planned_output_kg: number
+          planned_start_at: string | null
+          product_name: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          factory_id: string
+          id?: string
+          machine_id?: string | null
+          order_number: string
+          planned_end_at?: string | null
+          planned_output_kg?: number
+          planned_start_at?: string | null
+          product_name: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          factory_id?: string
+          id?: string
+          machine_id?: string | null
+          order_number?: string
+          planned_end_at?: string | null
+          planned_output_kg?: number
+          planned_start_at?: string | null
+          product_name?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_orders_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_orders_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_plans: {
+        Row: {
+          constraints: Json
+          created_at: string
+          created_by: string | null
+          factory_id: string
+          id: string
+          outputs: Json
+          plan_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          constraints?: Json
+          created_at?: string
+          created_by?: string | null
+          factory_id: string
+          id?: string
+          outputs?: Json
+          plan_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          constraints?: Json
+          created_at?: string
+          created_by?: string | null
+          factory_id?: string
+          id?: string
+          outputs?: Json
+          plan_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_plans_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_plans_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_runs: {
+        Row: {
+          actual_output_kg: number
+          created_at: string
+          created_by: string | null
+          ended_at: string | null
+          factory_id: string
+          id: string
+          machine_id: string | null
+          planned_output_kg: number
+          production_order_id: string
+          scrap_kg: number
+          started_at: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_output_kg?: number
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          factory_id: string
+          id?: string
+          machine_id?: string | null
+          planned_output_kg?: number
+          production_order_id: string
+          scrap_kg?: number
+          started_at?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_output_kg?: number
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          factory_id?: string
+          id?: string
+          machine_id?: string | null
+          planned_output_kg?: number
+          production_order_id?: string
+          scrap_kg?: number
+          started_at?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_runs_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_runs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_runs_production_order_id_fkey"
             columns: ["production_order_id"]
             isOneToOne: false
             referencedRelation: "production_orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_bags_production_planning_id_fkey"
-            columns: ["production_planning_id"]
+            foreignKeyName: "production_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: "production_planning"
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_yield_metrics: {
+        Row: {
+          consumed_material_kg: number
+          created_at: string
+          factory_id: string
+          id: string
+          produced_output_kg: number
+          production_run_id: string
+          tenant_id: string
+          yield_ratio: number
+        }
+        Insert: {
+          consumed_material_kg?: number
+          created_at?: string
+          factory_id: string
+          id?: string
+          produced_output_kg?: number
+          production_run_id: string
+          tenant_id: string
+          yield_ratio?: number
+        }
+        Update: {
+          consumed_material_kg?: number
+          created_at?: string
+          factory_id?: string
+          id?: string
+          produced_output_kg?: number
+          production_run_id?: string
+          tenant_id?: string
+          yield_ratio?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_yield_metrics_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_bags_transfer_id_fkey"
+            foreignKeyName: "production_yield_metrics_production_run_id_fkey"
+            columns: ["production_run_id"]
+            isOneToOne: false
+            referencedRelation: "production_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_yield_metrics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          default_factory_id: string | null
+          email: string
+          full_name: string
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_factory_id?: string | null
+          email: string
+          full_name: string
+          id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_factory_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_default_factory_id_fkey"
+            columns: ["default_factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projection_machine_metrics: {
+        Row: {
+          availability: number
+          factory_id: string
+          id: string
+          machine_id: string
+          oee: number
+          performance: number
+          quality: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          availability?: number
+          factory_id: string
+          id?: string
+          machine_id: string
+          oee?: number
+          performance?: number
+          quality?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          availability?: number
+          factory_id?: string
+          id?: string
+          machine_id?: string
+          oee?: number
+          performance?: number
+          quality?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projection_production_summary: {
+        Row: {
+          factory_id: string
+          id: string
+          output_kg: number
+          production_run_id: string
+          scrap_kg: number
+          tenant_id: string
+          updated_at: string
+          yield_ratio: number
+        }
+        Insert: {
+          factory_id: string
+          id?: string
+          output_kg?: number
+          production_run_id: string
+          scrap_kg?: number
+          tenant_id: string
+          updated_at?: string
+          yield_ratio?: number
+        }
+        Update: {
+          factory_id?: string
+          id?: string
+          output_kg?: number
+          production_run_id?: string
+          scrap_kg?: number
+          tenant_id?: string
+          updated_at?: string
+          yield_ratio?: number
+        }
+        Relationships: []
+      }
+      projection_stock_balances: {
+        Row: {
+          factory_id: string
+          id: string
+          last_event_id: string | null
+          location_id: string
+          material_id: string
+          quantity_kg: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          factory_id: string
+          id?: string
+          last_event_id?: string | null
+          location_id: string
+          material_id: string
+          quantity_kg?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          factory_id?: string
+          id?: string
+          last_event_id?: string | null
+          location_id?: string
+          material_id?: string
+          quantity_kg?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      separations: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          factory_id: string
+          id: string
+          notes: string | null
+          started_at: string | null
+          status: string
+          tenant_id: string
+          transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          factory_id: string
+          id?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          tenant_id: string
+          transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          factory_id?: string
+          id?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          tenant_id?: string
+          transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "separations_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "separations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "separations_transfer_id_fkey"
             columns: ["transfer_id"]
             isOneToOne: false
             referencedRelation: "transfers"
@@ -484,624 +1211,118 @@ export type Database = {
           },
         ]
       }
-      production_batches: {
+      stock_balances: {
         Row: {
-          batch_code: string | null
-          batch_count: number
-          batches: number | null
-          completed_at: string | null
-          created_at: string | null
-          final_product: string | null
-          formulation_id: string
+          created_at: string
+          factory_id: string
           id: string
-          machine: string | null
-          notes: string | null
-          produced_by: string | null
-          produced_by_name: string | null
-          production_order_id: string | null
-          status: string
-          total_compound_kg: number
-        }
-        Insert: {
-          batch_code?: string | null
-          batch_count?: number
-          batches?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          final_product?: string | null
-          formulation_id: string
-          id?: string
-          machine?: string | null
-          notes?: string | null
-          produced_by?: string | null
-          produced_by_name?: string | null
-          production_order_id?: string | null
-          status?: string
-          total_compound_kg?: number
-        }
-        Update: {
-          batch_code?: string | null
-          batch_count?: number
-          batches?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          final_product?: string | null
-          formulation_id?: string
-          id?: string
-          machine?: string | null
-          notes?: string | null
-          produced_by?: string | null
-          produced_by_name?: string | null
-          production_order_id?: string | null
-          status?: string
-          total_compound_kg?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_batches_formulation_id_fkey"
-            columns: ["formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_batches_production_order_id_fkey"
-            columns: ["production_order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      production_order_items: {
-        Row: {
-          adjusted_quantity_kg: number
-          created_at: string | null
-          difference_kg: number
-          id: string
-          ideal_quantity_kg: number
-          justification: string | null
-          package_type: string
-          package_weight: number
-          product_id: string
-          production_order_id: string
-        }
-        Insert: {
-          adjusted_quantity_kg?: number
-          created_at?: string | null
-          difference_kg?: number
-          id?: string
-          ideal_quantity_kg?: number
-          justification?: string | null
-          package_type?: string
-          package_weight?: number
-          product_id: string
-          production_order_id: string
-        }
-        Update: {
-          adjusted_quantity_kg?: number
-          created_at?: string | null
-          difference_kg?: number
-          id?: string
-          ideal_quantity_kg?: number
-          justification?: string | null
-          package_type?: string
-          package_weight?: number
-          product_id?: string
-          production_order_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_order_items_production_order_id_fkey"
-            columns: ["production_order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      production_orders: {
-        Row: {
-          batches: number
-          confirmed_at: string | null
-          created_at: string | null
-          created_by: string | null
-          created_by_name: string | null
-          final_product: string
-          formulation_id: string
-          id: string
-          machine: string | null
-          notes: string | null
-          status: string
-          total_compound_kg: number
-          weight_per_batch: number
-        }
-        Insert: {
-          batches?: number
-          confirmed_at?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          final_product: string
-          formulation_id: string
-          id?: string
-          machine?: string | null
-          notes?: string | null
-          status?: string
-          total_compound_kg?: number
-          weight_per_batch?: number
-        }
-        Update: {
-          batches?: number
-          confirmed_at?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          final_product?: string
-          formulation_id?: string
-          id?: string
-          machine?: string | null
-          notes?: string | null
-          status?: string
-          total_compound_kg?: number
-          weight_per_batch?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_orders_formulation_id_fkey"
-            columns: ["formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      production_planning: {
-        Row: {
-          batches: number
-          cancel_reason: string | null
-          cancelled_at: string | null
-          cancelled_by: string | null
-          cancelled_by_name: string | null
-          created_at: string | null
-          created_by: string | null
-          created_by_name: string | null
-          executed_at: string | null
-          executed_by: string | null
-          executed_by_name: string | null
-          formulation_id: string
-          id: string
-          mixer_id: string
-          notes: string | null
-          production_date: string
-          production_order_id: string | null
-          status: string
-          total_weight_kg: number
-          updated_at: string | null
-        }
-        Insert: {
-          batches?: number
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          cancelled_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          executed_at?: string | null
-          executed_by?: string | null
-          executed_by_name?: string | null
-          formulation_id: string
-          id?: string
-          mixer_id: string
-          notes?: string | null
-          production_date: string
-          production_order_id?: string | null
-          status?: string
-          total_weight_kg?: number
-          updated_at?: string | null
-        }
-        Update: {
-          batches?: number
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          cancelled_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          executed_at?: string | null
-          executed_by?: string | null
-          executed_by_name?: string | null
-          formulation_id?: string
-          id?: string
-          mixer_id?: string
-          notes?: string | null
-          production_date?: string
-          production_order_id?: string | null
-          status?: string
-          total_weight_kg?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_planning_formulation_id_fkey"
-            columns: ["formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_planning_mixer_id_fkey"
-            columns: ["mixer_id"]
-            isOneToOne: false
-            referencedRelation: "mixers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_planning_production_order_id_fkey"
-            columns: ["production_order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      production_schedules: {
-        Row: {
-          batches: number
-          confirmed_at: string | null
-          confirmed_by: string | null
-          confirmed_by_name: string | null
-          created_at: string | null
-          created_by: string | null
-          created_by_name: string | null
-          formulation_id: string
-          id: string
-          mixer_id: string
-          notes: string | null
-          production_date: string
-          status: string
-          total_weight_kg: number
-        }
-        Insert: {
-          batches?: number
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          formulation_id: string
-          id?: string
-          mixer_id: string
-          notes?: string | null
-          production_date: string
-          status?: string
-          total_weight_kg?: number
-        }
-        Update: {
-          batches?: number
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          created_by_name?: string | null
-          formulation_id?: string
-          id?: string
-          mixer_id?: string
-          notes?: string | null
-          production_date?: string
-          status?: string
-          total_weight_kg?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_schedules_formulation_id_fkey"
-            columns: ["formulation_id"]
-            isOneToOne: false
-            referencedRelation: "formulations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_schedules_mixer_id_fkey"
-            columns: ["mixer_id"]
-            isOneToOne: false
-            referencedRelation: "mixers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      products: {
-        Row: {
-          base_unit: string
-          category_id: string | null
-          conversion_factor: number
-          created_at: string | null
-          id: string
-          name: string
-          package_type: string
-          package_weight: number
-          unit_weight_kg: number
-        }
-        Insert: {
-          base_unit?: string
-          category_id?: string | null
-          conversion_factor?: number
-          created_at?: string | null
-          id?: string
-          name: string
-          package_type?: string
-          package_weight?: number
-          unit_weight_kg?: number
-        }
-        Update: {
-          base_unit?: string
-          category_id?: string | null
-          conversion_factor?: number
-          created_at?: string | null
-          id?: string
-          name?: string
-          package_type?: string
-          package_weight?: number
-          unit_weight_kg?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          full_name: string
-          id: string
-          username: string
-        }
-        Insert: {
-          created_at?: string | null
-          full_name: string
-          id: string
-          username: string
-        }
-        Update: {
-          created_at?: string | null
-          full_name?: string
-          id?: string
-          username?: string
-        }
-        Relationships: []
-      }
-      purchase_suggestions: {
-        Row: {
-          available_stock_kg: number
-          created_at: string | null
-          id: string
-          notes: string | null
-          product_id: string
-          production_schedule_id: string | null
-          required_quantity_kg: number
-          resolved_at: string | null
-          resolved_by: string | null
-          resolved_by_name: string | null
-          status: string
-          suggested_purchase_kg: number
-        }
-        Insert: {
-          available_stock_kg?: number
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          product_id: string
-          production_schedule_id?: string | null
-          required_quantity_kg?: number
-          resolved_at?: string | null
-          resolved_by?: string | null
-          resolved_by_name?: string | null
-          status?: string
-          suggested_purchase_kg?: number
-        }
-        Update: {
-          available_stock_kg?: number
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          product_id?: string
-          production_schedule_id?: string | null
-          required_quantity_kg?: number
-          resolved_at?: string | null
-          resolved_by?: string | null
-          resolved_by_name?: string | null
-          status?: string
-          suggested_purchase_kg?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "purchase_suggestions_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_suggestions_production_schedule_id_fkey"
-            columns: ["production_schedule_id"]
-            isOneToOne: false
-            referencedRelation: "production_schedules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      separations: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          from_sector: string
-          id: string
-          operator: string | null
-          product_id: string
-          product_name: string
-          quantity: number
-          status: string
-          to_sector: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          from_sector: string
-          id?: string
-          operator?: string | null
-          product_id: string
-          product_name: string
-          quantity: number
-          status?: string
-          to_sector: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          from_sector?: string
-          id?: string
-          operator?: string | null
-          product_id?: string
-          product_name?: string
-          quantity?: number
-          status?: string
-          to_sector?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "separations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stock: {
-        Row: {
-          id: string
-          location_code: string
-          product_id: string
-          quantity: number
-          total_kg: number
-          unit: string
-          updated_at: string | null
+          location_id: string
+          material_id: string
+          quantity_kg: number
+          tenant_id: string
+          updated_at: string
           updated_by: string | null
         }
         Insert: {
+          created_at?: string
+          factory_id: string
           id?: string
-          location_code: string
-          product_id: string
-          quantity?: number
-          total_kg?: number
-          unit?: string
-          updated_at?: string | null
+          location_id: string
+          material_id: string
+          quantity_kg?: number
+          tenant_id: string
+          updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          created_at?: string
+          factory_id?: string
           id?: string
-          location_code?: string
-          product_id?: string
-          quantity?: number
-          total_kg?: number
-          unit?: string
-          updated_at?: string | null
+          location_id?: string
+          material_id?: string
+          quantity_kg?: number
+          tenant_id?: string
+          updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "stock_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "stock_balances_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_balances_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
       }
-      stock_adjustments: {
+      stock_locations: {
         Row: {
-          created_at: string | null
-          difference_kg: number
+          code: string
+          created_at: string
+          factory_id: string
           id: string
-          location_code: string
-          new_quantity: number
-          new_total_kg: number
-          old_quantity: number
-          old_total_kg: number
-          product_id: string
-          reason: string | null
-          reference_id: string | null
-          reference_type: string | null
-          user_id: string | null
-          user_name: string | null
+          is_active: boolean
+          location_type: string
+          name: string
+          tenant_id: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          difference_kg?: number
+          code: string
+          created_at?: string
+          factory_id: string
           id?: string
-          location_code: string
-          new_quantity?: number
-          new_total_kg?: number
-          old_quantity?: number
-          old_total_kg?: number
-          product_id: string
-          reason?: string | null
-          reference_id?: string | null
-          reference_type?: string | null
-          user_id?: string | null
-          user_name?: string | null
+          is_active?: boolean
+          location_type?: string
+          name: string
+          tenant_id: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          difference_kg?: number
+          code?: string
+          created_at?: string
+          factory_id?: string
           id?: string
-          location_code?: string
-          new_quantity?: number
-          new_total_kg?: number
-          old_quantity?: number
-          old_total_kg?: number
-          product_id?: string
-          reason?: string | null
-          reference_id?: string | null
-          reference_type?: string | null
-          user_id?: string | null
-          user_name?: string | null
+          is_active?: boolean
+          location_type?: string
+          name?: string
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stock_adjustments_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "stock_locations_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_adjustments_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_locations_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1109,158 +1330,156 @@ export type Database = {
       stock_movements: {
         Row: {
           batch_id: string | null
-          created_at: string | null
+          created_at: string
+          created_by: string | null
+          factory_id: string
+          from_location_id: string | null
           id: string
-          location_code: string
+          material_id: string
           movement_type: string
           notes: string | null
-          product_id: string
-          quantity: number
+          quantity_kg: number
           reference_id: string | null
           reference_type: string | null
-          total_kg: number
-          unit: string
-          user_id: string | null
-          user_name: string | null
+          tenant_id: string
+          to_location_id: string | null
         }
         Insert: {
           batch_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          factory_id: string
+          from_location_id?: string | null
           id?: string
-          location_code: string
+          material_id: string
           movement_type: string
           notes?: string | null
-          product_id: string
-          quantity: number
+          quantity_kg: number
           reference_id?: string | null
           reference_type?: string | null
-          total_kg?: number
-          unit?: string
-          user_id?: string | null
-          user_name?: string | null
+          tenant_id: string
+          to_location_id?: string | null
         }
         Update: {
           batch_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          factory_id?: string
+          from_location_id?: string | null
           id?: string
-          location_code?: string
+          material_id?: string
           movement_type?: string
           notes?: string | null
-          product_id?: string
-          quantity?: number
+          quantity_kg?: number
           reference_id?: string | null
           reference_type?: string | null
-          total_kg?: number
-          unit?: string
-          user_id?: string | null
-          user_name?: string | null
+          tenant_id?: string
+          to_location_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "stock_movements_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
-            referencedRelation: "production_batches"
+            referencedRelation: "material_batches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_movements_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "stock_movements_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_movements_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_movements_from_location_id_fkey"
+            columns: ["from_location_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_locations"
             referencedColumns: ["id"]
           },
         ]
       }
-      stock_snapshots: {
+      tenants: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          product_id: string
-          quantity: number
-          sector: string
-          total_kg: number
-          unit: string
-          user_id: string | null
-          user_name: string | null
+          status: string
+          tenant_name: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          product_id: string
-          quantity?: number
-          sector: string
-          total_kg?: number
-          unit?: string
-          user_id?: string | null
-          user_name?: string | null
+          status?: string
+          tenant_name: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          product_id?: string
-          quantity?: number
-          sector?: string
-          total_kg?: number
-          unit?: string
-          user_id?: string | null
-          user_name?: string | null
+          status?: string
+          tenant_name?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "stock_snapshots_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       transfer_items: {
         Row: {
           batch_id: string | null
-          created_at: string | null
+          created_at: string
+          factory_id: string
           id: string
-          product_id: string
-          requested_quantity: number
-          requested_unit: string
-          sent_quantity: number
-          sent_total_kg: number
-          sent_unit: string
+          material_id: string
+          moved_kg: number
+          requested_kg: number
           status: string
+          tenant_id: string
           transfer_id: string
         }
         Insert: {
           batch_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          factory_id: string
           id?: string
-          product_id: string
-          requested_quantity?: number
-          requested_unit?: string
-          sent_quantity?: number
-          sent_total_kg?: number
-          sent_unit?: string
+          material_id: string
+          moved_kg?: number
+          requested_kg?: number
           status?: string
+          tenant_id: string
           transfer_id: string
         }
         Update: {
           batch_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          factory_id?: string
           id?: string
-          product_id?: string
-          requested_quantity?: number
-          requested_unit?: string
-          sent_quantity?: number
-          sent_total_kg?: number
-          sent_unit?: string
+          material_id?: string
+          moved_kg?: number
+          requested_kg?: number
           status?: string
+          tenant_id?: string
           transfer_id?: string
         }
         Relationships: [
@@ -1268,14 +1487,28 @@ export type Database = {
             foreignKeyName: "transfer_items_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
-            referencedRelation: "production_batches"
+            referencedRelation: "material_batches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transfer_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "transfer_items_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_items_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
@@ -1289,187 +1522,136 @@ export type Database = {
       }
       transfers: {
         Row: {
-          cancel_reason: string | null
-          cancelled_at: string | null
-          cancelled_by: string | null
-          cancelled_by_name: string | null
           confirmed_at: string | null
           confirmed_by: string | null
-          confirmed_by_name: string | null
-          created_at: string | null
-          from_location: string
+          created_at: string
+          factory_id: string
+          from_location_id: string
           id: string
           notes: string | null
+          requested_at: string
           requested_by: string | null
-          requested_by_name: string | null
           status: string
-          to_location: string
+          tenant_id: string
+          to_location_id: string
+          updated_at: string
         }
         Insert: {
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          cancelled_by_name?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          from_location: string
+          created_at?: string
+          factory_id: string
+          from_location_id: string
           id?: string
           notes?: string | null
+          requested_at?: string
           requested_by?: string | null
-          requested_by_name?: string | null
           status?: string
-          to_location: string
+          tenant_id: string
+          to_location_id: string
+          updated_at?: string
         }
         Update: {
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          cancelled_by_name?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
-          confirmed_by_name?: string | null
-          created_at?: string | null
-          from_location?: string
+          created_at?: string
+          factory_id?: string
+          from_location_id?: string
           id?: string
           notes?: string | null
+          requested_at?: string
           requested_by?: string | null
-          requested_by_name?: string | null
           status?: string
-          to_location?: string
+          tenant_id?: string
+          to_location_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "transfers_from_location_fkey"
-            columns: ["from_location"]
+            foreignKeyName: "transfers_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transfers_to_location_fkey"
-            columns: ["to_location"]
+            foreignKeyName: "transfers_from_location_id_fkey"
+            columns: ["from_location_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
           },
         ]
       }
       user_roles: {
         Row: {
+          created_at: string
+          factory_id: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
           user_id: string
         }
         Insert: {
+          created_at?: string
+          factory_id?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
           user_id: string
         }
         Update: {
+          created_at?: string
+          factory_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      inventory_adjustment_summary: {
-        Row: {
-          avg_difference_kg: number | null
-          location_code: string | null
-          product_id: string | null
-          total_adjustments: number | null
-          total_difference_kg: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "stock_adjustments_location_code_fkey"
-            columns: ["location_code"]
+            foreignKeyName: "user_roles_factory_id_fkey"
+            columns: ["factory_id"]
             isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["code"]
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_adjustments_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
       }
     }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      admin_stock_adjustment: {
-        Args: {
-          p_justification: string
-          p_location_code: string
-          p_new_quantity: number
-          p_new_total_kg: number
-          p_product_id: string
-          p_user_id: string
-          p_user_name: string
-        }
-        Returns: Json
-      }
-      confirm_inventory_count: {
-        Args: {
-          p_count_id: string
-          p_items?: Json
-          p_user_id: string
-          p_user_name: string
-        }
-        Returns: Json
-      }
-      confirm_production: {
-        Args: {
-          p_batches: number
-          p_final_product: string
-          p_formulation_id: string
-          p_items?: Json
-          p_machine: string
-          p_notes?: string
-          p_total_compound_kg: number
-          p_user_id: string
-          p_user_name: string
-          p_weight_per_batch: number
-        }
-        Returns: Json
-      }
-      confirm_transfer: {
-        Args: {
-          p_confirmed_items?: Json
-          p_transfer_id: string
-          p_user_id?: string
-          p_user_name?: string
-        }
-        Returns: Json
-      }
-      get_user_role: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
+      can_access_factory: { Args: { _factory_id: string }; Returns: boolean }
+      current_tenant_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
-      }
-      stock_entry: {
-        Args: {
-          p_location_code: string
-          p_notes?: string
-          p_product_id: string
-          p_quantity: number
-          p_unit: string
-          p_user_id: string
-          p_user_name: string
-        }
-        Returns: Json
       }
     }
     Enums: {
