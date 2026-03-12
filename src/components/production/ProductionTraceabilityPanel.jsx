@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOperatorFlowStore } from '@/lib/operatorFlowStore';
-import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import { applyExportPreset, exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
 
