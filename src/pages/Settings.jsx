@@ -850,50 +850,118 @@ export default function Settings() {
 
                     {/* Machines Tab */}
                     <TabsContent value="machines">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Máquinas</CardTitle>
-                                <Button onClick={handleAdd}>
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Nova Máquina
-                                </Button>
-                            </CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Código</TableHead>
-                                            <TableHead>Nome</TableHead>
-                                            <TableHead>Tipo</TableHead>
-                                            <TableHead>Setor</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Ações</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {machines.map(m => (
-                                            <TableRow key={m.id}>
-                                                <TableCell className="font-semibold">{m.code}</TableCell>
-                                                <TableCell>{m.name}</TableCell>
-                                                <TableCell className="capitalize">{m.type}</TableCell>
-                                                <TableCell>{m.sector}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline">{m.status}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
-                                                        <Edit className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
-                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                    </Button>
-                                                </TableCell>
+                        <div className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Categorias de Máquina</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex flex-col md:flex-row gap-2">
+                                        <Input
+                                            value={newMachineCategory}
+                                            onChange={(e) => setNewMachineCategory(e.target.value)}
+                                            placeholder="Nova categoria (ex: misturadora)"
+                                        />
+                                        <Button onClick={addMachineCategory} className="md:w-auto w-full">
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Adicionar categoria
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {machineCategories.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground">Nenhuma categoria cadastrada.</p>
+                                        ) : machineCategories.map((category) => {
+                                            const usageCount = getCategoryUsageCount(category.name);
+                                            const isEditing = editingCategoryId === category.id;
+
+                                            return (
+                                                <div key={category.id} className="flex flex-col md:flex-row md:items-center justify-between gap-2 border rounded-md p-3">
+                                                    <div className="flex-1">
+                                                        {isEditing ? (
+                                                            <Input
+                                                                value={editingCategoryName}
+                                                                onChange={(e) => setEditingCategoryName(e.target.value)}
+                                                                placeholder="Nome da categoria"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-medium">{category.name}</span>
+                                                                <Badge variant="secondary">{usageCount} máquina(s)</Badge>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-2 justify-end">
+                                                        {isEditing ? (
+                                                            <>
+                                                                <Button size="sm" onClick={() => saveEditMachineCategory(category.id)}>Salvar</Button>
+                                                                <Button size="sm" variant="outline" onClick={() => { setEditingCategoryId(null); setEditingCategoryName(''); }}>
+                                                                    Cancelar
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Button size="sm" variant="outline" onClick={() => startEditMachineCategory(category)}>
+                                                                    <Edit className="w-4 h-4 mr-1" /> Editar
+                                                                </Button>
+                                                                <Button size="sm" variant="ghost" onClick={() => setCategoryToDelete(category)}>
+                                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardTitle>Máquinas</CardTitle>
+                                    <Button onClick={handleAdd}>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Nova Máquina
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Código</TableHead>
+                                                <TableHead>Nome</TableHead>
+                                                <TableHead>Categoria</TableHead>
+                                                <TableHead>Setor</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Ações</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {machines.map(m => (
+                                                <TableRow key={m.id}>
+                                                    <TableCell className="font-semibold">{m.code}</TableCell>
+                                                    <TableCell>{m.name}</TableCell>
+                                                    <TableCell className="capitalize">{m.type}</TableCell>
+                                                    <TableCell>{m.sector}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline">{m.status}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
+                                                            <Edit className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
 
                     {/* Shifts Tab */}
