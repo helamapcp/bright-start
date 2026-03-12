@@ -1646,6 +1646,38 @@ export type Database = {
     Functions: {
       can_access_factory: { Args: { _factory_id: string }; Returns: boolean }
       current_tenant_id: { Args: never; Returns: string }
+      fn_calculate_oee: {
+        Args: {
+          p_created_by?: string
+          p_factory_id: string
+          p_production_run_id: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      fn_calculate_yield: {
+        Args: {
+          p_created_by?: string
+          p_factory_id: string
+          p_production_run_id: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      fn_consume_material: {
+        Args: {
+          p_batch_id?: string
+          p_consumed_at?: string
+          p_consumed_kg: number
+          p_consumption_location_code?: string
+          p_created_by?: string
+          p_factory_id: string
+          p_material_id: string
+          p_production_run_id: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       fn_create_material_reception: {
         Args: {
           p_batch_code: string
@@ -1670,6 +1702,18 @@ export type Database = {
           p_requested_by?: string
           p_tenant_id: string
           p_to_location_code: string
+        }
+        Returns: Json
+      }
+      fn_register_produced_bag: {
+        Args: {
+          p_created_by?: string
+          p_factory_id: string
+          p_location_code?: string
+          p_material_id: string
+          p_production_run_id: string
+          p_tenant_id: string
+          p_weight_kg: number
         }
         Returns: Json
       }
