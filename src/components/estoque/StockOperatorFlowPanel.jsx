@@ -425,15 +425,20 @@ export default function StockOperatorFlowPanel() {
   };
 
   const exportProductionOps = () => {
-    const rows = generatedOps.map((op) => ({
+    const sourceRows = generatedOps.map((op) => ({
       op_number: op.opNumber,
       mixer: op.mixer,
+      machine: op.mixer,
       shift: op.shift,
       formulation: op.formulationName,
+      material: op.formulationName,
       total_kg: formatNumber(op.totalKg),
       created_at: op.createdAt,
       status: op.status,
     }));
+
+    const rows = buildExportedRows(sourceRows, 'created_at');
+    if (!rows.length) return toast.error('No OP rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'production-ops', sheetName: 'ProductionOPs', rows });
     exportRowsToPdf({
