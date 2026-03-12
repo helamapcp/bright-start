@@ -802,8 +802,15 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Separation orders with justified adjustment</CardTitle>
-          <CardDescription>Adjust dispatched sacks per line; changed quantities require justification.</CardDescription>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <CardTitle className="text-base">Separation orders with justified adjustment</CardTitle>
+              <CardDescription>Adjust dispatched sacks per line; changed quantities require justification.</CardDescription>
+            </div>
+            <Button size="sm" variant="outline" onClick={exportSeparationOrders}>
+              <Download className="w-4 h-4 mr-2" /> Export separation orders
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {openSeparationOrders.length === 0 && (
