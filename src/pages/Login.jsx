@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
-  authenticateFrontendUser,
   ACTIVE_USER_STORAGE_KEY,
   USERS_STORAGE_KEY,
   readUsers,
