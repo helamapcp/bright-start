@@ -124,9 +124,6 @@ export default function MachineSelection() {
                             <Button variant="outline" size="icon" onClick={() => refetchMachines()}>
                                 <RefreshCw className="w-4 h-4" />
                             </Button>
-                            <Button variant="outline" size="icon" onClick={handleLogout}>
-                                <LogOut className="w-4 h-4" />
-                            </Button>
                         </div>
                     </div>
                 </div>
