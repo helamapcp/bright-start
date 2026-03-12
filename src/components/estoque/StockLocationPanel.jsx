@@ -22,11 +22,16 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useInventoryStore } from '@/lib/inventoryStore';
+import { canPerformAction } from '@/lib/rbac';
+import { useUsersStore } from '@/lib/userStore';
 
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString('pt-BR') : '—');
 
 export default function StockLocationPanel({ location, title, description }) {
   const { getItemsByLocation, summaryByLocation, adjustItemQuantity } = useInventoryStore();
+  const { currentUser } = useUsersStore();
+  const canAdjustInventory = canPerformAction(currentUser?.role, 'inventory.adjust', { location });
+
   const locationItems = getItemsByLocation(location);
   const summary = summaryByLocation[location] || { totalItems: 0, totalQuantity: 0 };
 
@@ -42,6 +47,11 @@ export default function StockLocationPanel({ location, title, description }) {
   const effectiveSelectedItemId = selectedItemId || selectedItem?.id || '';
 
   const onConfirmAdjustment = () => {
+    if (!canAdjustInventory) {
+      toast.error('Your role cannot apply manual inventory adjustments in this location.');
+      return;
+    }
+
     if (!effectiveSelectedItemId) {
       toast.error('Selecione um item para ajustar.');
       return;
@@ -53,6 +63,7 @@ export default function StockLocationPanel({ location, title, description }) {
         itemId: effectiveSelectedItemId,
         adjustmentQty,
         comment,
+        userName: currentUser?.full_name,
       });
       setAdjustmentQty('');
       setComment('');
@@ -126,6 +137,12 @@ export default function StockLocationPanel({ location, title, description }) {
           <CardTitle className="text-base">Ajuste manual</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {!canAdjustInventory && (
+            <div className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+              Your role has read-only access for this location.
+            </div>
+          )}
+
           <div className="space-y-1">
             <Label>Item</Label>
             <Select value={effectiveSelectedItemId} onValueChange={setSelectedItemId}>
@@ -149,6 +166,7 @@ export default function StockLocationPanel({ location, title, description }) {
               value={adjustmentQty}
               onChange={(event) => setAdjustmentQty(event.target.value)}
               placeholder="Ex: 25 ou -10"
+              disabled={!canAdjustInventory}
             />
           </div>
           <div className="space-y-1">
@@ -157,9 +175,10 @@ export default function StockLocationPanel({ location, title, description }) {
               value={comment}
               onChange={(event) => setComment(event.target.value)}
               placeholder="Informe o motivo do ajuste manual"
+              disabled={!canAdjustInventory}
             />
           </div>
-          <Button onClick={onConfirmAdjustment} disabled={!locationItems.length}>
+          <Button onClick={onConfirmAdjustment} disabled={!locationItems.length || !canAdjustInventory}>
             Confirmar ajuste
           </Button>
         </CardContent>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getCurrentUserSnapshot } from '@/lib/userStore';
 
 const SYSTEM_LOG_STORAGE_KEY = 'frontend-system-log-v1';
 const SYSTEM_LOG_EVENT = 'frontend-system-log-updated';
@@ -36,17 +37,18 @@ export const appendSystemLog = ({
   action = 'action',
   action_type = 'update',
   parameters = {},
-  user_id = 'local-user-1',
-  user_name = 'Frontend Local',
+  user_id,
+  user_name,
   location = 'SISTEMA',
 } = {}) => {
+  const actor = getCurrentUserSnapshot();
   const next = {
     id: makeId(),
     action,
     action_type,
     parameters,
-    user_id,
-    user_name,
+    user_id: user_id || actor?.id || 'local-user-1',
+    user_name: user_name || actor?.full_name || 'Frontend Local',
     location,
     timestamp: getNowIso(),
   };
