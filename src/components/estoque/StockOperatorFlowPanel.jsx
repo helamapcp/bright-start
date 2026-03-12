@@ -159,21 +159,25 @@ export default function StockOperatorFlowPanel() {
   };
 
   const createScheduledTransfer = (suggestion) => {
-    createTransferRequest({
-      kind: 'scheduled',
-      sourceLocation: suggestion.sourceLocation,
-      destinationLocation: suggestion.destinationLocation,
-      dayKey: suggestion.dayKey,
-      mixer: suggestion.mixer,
-      shift: suggestion.shift,
-      batches: suggestion.batches,
-      formulationName: suggestion.formulationName,
-      materials: suggestion.materials,
-      notes: `Programação PMP ${suggestion.dayKey}`,
-      userName: currentUser?.full_name,
-    });
+    try {
+      createTransferRequest({
+        kind: 'scheduled',
+        sourceLocation: suggestion.sourceLocation,
+        destinationLocation: suggestion.destinationLocation,
+        dayKey: suggestion.dayKey,
+        mixer: suggestion.mixer,
+        shift: suggestion.shift,
+        batches: suggestion.batches,
+        formulationName: suggestion.formulationName,
+        materials: suggestion.materials,
+        notes: `Programação PMP ${suggestion.dayKey}`,
+        userName: currentUser?.full_name,
+      });
 
-    toast.success(`Transfer + OP generated for ${suggestion.formulationName}.`);
+      toast.success(`Transfer + OP generated for ${suggestion.formulationName}.`);
+    } catch (error) {
+      toast.error(error.message || 'Could not generate scheduled transfer.');
+    }
   };
 
   const createManualTransfer = () => {
@@ -187,32 +191,36 @@ export default function StockOperatorFlowPanel() {
     const kg = manualDraft.unit === 'sacks' ? qty * sackKg : qty;
     const newSacks = manualDraft.unit === 'sacks' ? qty : Math.ceil(kg / sackKg);
 
-    createTransferRequest({
-      kind: 'manual',
-      sourceLocation: manualDraft.sourceLocation,
-      destinationLocation: manualDraft.destinationLocation,
-      dayKey: selectedDayKey,
-      mixer: manualDraft.mixer,
-      shift: manualDraft.shift,
-      formulationName: 'Transferência manual',
-      materials: [
-        {
-          materialKey: manualDraft.materialValue.split('::')[0],
-          materialName,
-          sackKg,
-          requiredKg: kg,
-          fromLeftoverKg: 0,
-          newSacks,
-          newlyDrawnKg: newSacks * sackKg,
-          expectedPmpLeftoverKg: Number((newSacks * sackKg - kg).toFixed(2)),
-        },
-      ],
-      notes: manualDraft.notes,
-      userName: currentUser?.full_name,
-    });
+    try {
+      createTransferRequest({
+        kind: 'manual',
+        sourceLocation: manualDraft.sourceLocation,
+        destinationLocation: manualDraft.destinationLocation,
+        dayKey: selectedDayKey,
+        mixer: manualDraft.mixer,
+        shift: manualDraft.shift,
+        formulationName: 'Transferência manual',
+        materials: [
+          {
+            materialKey: manualDraft.materialValue.split('::')[0],
+            materialName,
+            sackKg,
+            requiredKg: kg,
+            fromLeftoverKg: 0,
+            newSacks,
+            newlyDrawnKg: newSacks * sackKg,
+            expectedPmpLeftoverKg: Number((newSacks * sackKg - kg).toFixed(2)),
+          },
+        ],
+        notes: manualDraft.notes,
+        userName: currentUser?.full_name,
+      });
 
-    toast.success('Manual transfer request created.');
-    setManualDraft((prev) => ({ ...prev, materialValue: '', quantity: '', notes: '' }));
+      toast.success('Manual transfer request created.');
+      setManualDraft((prev) => ({ ...prev, materialValue: '', quantity: '', notes: '' }));
+    } catch (error) {
+      toast.error(error.message || 'Could not create manual transfer request.');
+    }
   };
 
   const handleOpenSeparation = (requestId) => {
@@ -237,11 +245,152 @@ export default function StockOperatorFlowPanel() {
         });
       });
 
+      const now = new Date().toISOString();
+      appendTransferEvent({
+        requestId: request.id,
+        action: `Stock transfer posted (${request.sourceLocation} → ${request.destinationLocation})`,
+        location: `${request.sourceLocation}→${request.destinationLocation}`,
+        userName: currentUser?.full_name,
+        timestamp: now,
+      });
+      appendTransferEvent({
+        requestId: request.id,
+        action: `Materials received at destination (${request.destinationLocation})`,
+        location: request.destinationLocation,
+        userName: currentUser?.full_name,
+        timestamp: now,
+      });
+
       completeSeparationOrder(order.id, currentUser?.full_name);
       toast.success('Separation completed and stock transfer posted.');
     } catch (error) {
       toast.error(error.message || 'Could not complete separation order.');
     }
+  };
+
+  const updateMixerDraft = (mixerName, patch) => {
+    setMixerDrafts((prev) => ({
+      ...prev,
+      [mixerName]: {
+        ...(prev[mixerName] || {}),
+        ...patch,
+      },
+    }));
+  };
+
+  const saveMixerConfig = (config) => {
+    const draft = mixerDrafts[config.mixerName] || {};
+    const nextMaxKg = draft.maxKg ?? config.maxKg;
+    const nextMode = draft.mode ?? config.mode;
+
+    try {
+      setMixerCapacity({
+        mixerName: config.mixerName,
+        maxKg: nextMaxKg,
+        mode: nextMode,
+      });
+      toast.success(`Mixer ${config.mixerName} capacity updated.`);
+    } catch (error) {
+      toast.error(error.message || 'Could not update mixer capacity.');
+    }
+  };
+
+  const exportTransferRequests = () => {
+    const rows = transferRequests.map((request) => ({
+      transfer_id: request.id,
+      op_number: request.opNumber,
+      source_location: request.sourceLocation,
+      destination_location: request.destinationLocation,
+      materials: (request.materials || [])
+        .map((line) => `${line.materialName} (${formatNumber(line.newlyDrawnKg || line.requiredKg)}kg)`)
+        .join('; '),
+      quantities_kg: formatNumber(request.totalKg),
+      quantities_sacks: request.totalSacks,
+      status: request.status,
+      created_at: request.createdAt,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'transfer-requests', sheetName: 'TransferRequests', rows });
+    exportRowsToPdf({
+      filePrefix: 'transfer-requests',
+      title: 'Transfer Requests',
+      columns: [
+        { key: 'transfer_id', label: 'Transfer ID' },
+        { key: 'source_location', label: 'Source' },
+        { key: 'destination_location', label: 'Destination' },
+        { key: 'materials', label: 'Materials' },
+        { key: 'quantities_kg', label: 'Total kg' },
+        { key: 'op_number', label: 'OP' },
+        { key: 'status', label: 'Status' },
+        { key: 'created_at', label: 'Created' },
+      ],
+      rows,
+    });
+    toast.success('Transfer Requests exported (PDF + Excel).');
+  };
+
+  const exportSeparationOrders = () => {
+    const rows = separationOrders.map((order) => {
+      const request = transferRequests.find((item) => item.id === order.requestId);
+      return {
+        order_id: order.id,
+        request_id: order.requestId,
+        requested_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.requestedSacks || 0), 0),
+        dispatched_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.dispatchSacks || 0), 0),
+        justifications: (order.lines || [])
+          .filter((line) => line.justification)
+          .map((line) => `${line.materialName}: ${line.justification}`)
+          .join(' | '),
+        operator: currentUser?.full_name || 'Frontend Local',
+        timestamp: order.completedAt || order.createdAt,
+        op_number: request?.opNumber || '—',
+      };
+    });
+
+    exportRowsToExcel({ filePrefix: 'separation-orders', sheetName: 'SeparationOrders', rows });
+    exportRowsToPdf({
+      filePrefix: 'separation-orders',
+      title: 'Separation Orders',
+      columns: [
+        { key: 'order_id', label: 'Order ID' },
+        { key: 'requested_sacks', label: 'Requested sacks' },
+        { key: 'dispatched_sacks', label: 'Dispatched sacks' },
+        { key: 'justifications', label: 'Justifications' },
+        { key: 'operator', label: 'Operator' },
+        { key: 'timestamp', label: 'Timestamp' },
+        { key: 'op_number', label: 'OP' },
+      ],
+      rows,
+    });
+    toast.success('Separation Orders exported (PDF + Excel).');
+  };
+
+  const exportProductionOps = () => {
+    const rows = generatedOps.map((op) => ({
+      op_number: op.opNumber,
+      mixer: op.mixer,
+      shift: op.shift,
+      formulation: op.formulationName,
+      total_kg: formatNumber(op.totalKg),
+      created_at: op.createdAt,
+      status: op.status,
+    }));
+
+    exportRowsToExcel({ filePrefix: 'production-ops', sheetName: 'ProductionOPs', rows });
+    exportRowsToPdf({
+      filePrefix: 'production-ops',
+      title: 'Production OPs',
+      columns: [
+        { key: 'op_number', label: 'OP number' },
+        { key: 'mixer', label: 'Mixer' },
+        { key: 'shift', label: 'Shift' },
+        { key: 'formulation', label: 'Formulation' },
+        { key: 'total_kg', label: 'Total kg' },
+        { key: 'created_at', label: 'Created' },
+      ],
+      rows,
+    });
+    toast.success('Production OPs exported (PDF + Excel).');
   };
 
   return (
