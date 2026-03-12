@@ -194,7 +194,7 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
                     <TableCell><Badge variant="secondary">{record.opNumber}</Badge></TableCell>
                     <TableCell>{formatNumber(record.producedKg)} kg</TableCell>
                     <TableCell>
-                      {(record.rawMaterials || []).map((material) => `${material.name} (${formatNumber(material.kg)}kg`).join(', ')}
+                      {(record.rawMaterials || []).map((material) => `${material.name} (${formatNumber(material.kg)}kg)`).join(', ')}
                     </TableCell>
                     <TableCell>{new Date(record.createdAt).toLocaleString('pt-BR')}</TableCell>
                   </TableRow>
