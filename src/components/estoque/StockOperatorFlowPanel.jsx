@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { useUsersStore } from '@/lib/userStore';
 import { useInventoryStore } from '@/lib/inventoryStore';
 import { computeScheduledSuggestions, useOperatorFlowStore } from '@/lib/operatorFlowStore';
+import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import TransferTimeline from '@/components/estoque/TransferTimeline';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Boxes, ClipboardList, PackagePlus, RefreshCw, Route, Workflow } from 'lucide-react';
+import { AlertTriangle, Boxes, ClipboardList, Download, PackagePlus, RefreshCw, Route, Workflow } from 'lucide-react';
 
 const toDayKey = (dateLike) => {
   const date = new Date(dateLike);
