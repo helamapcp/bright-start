@@ -440,6 +440,7 @@ export default function Settings() {
     const [editingCategoryId, setEditingCategoryId] = useState(null);
     const [editingCategoryName, setEditingCategoryName] = useState('');
     const [categoryToDelete, setCategoryToDelete] = useState(null);
+    const [collapsedMachineCategories, setCollapsedMachineCategories] = useState({});
 
     const { logs: systemLogs, users: logUsers } = useSystemLogs();
     const [logSearch, setLogSearch] = useState('');
