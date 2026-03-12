@@ -346,7 +346,7 @@ export default function StockOperatorFlowPanel() {
   const buildExportedRows = (rows, dateField) => applyExportPreset({ ...exportFilters, rows, dateField });
 
   const exportTransferRequests = () => {
-    const rows = transferRequests.map((request) => ({
+    const sourceRows = transferRequests.map((request) => ({
       transfer_id: request.id,
       op_number: request.opNumber,
       source_location: request.sourceLocation,
@@ -356,9 +356,13 @@ export default function StockOperatorFlowPanel() {
         .join('; '),
       quantities_kg: formatNumber(request.totalKg),
       quantities_sacks: request.totalSacks,
+      machine: request.mixer,
       status: request.status,
       created_at: request.createdAt,
     }));
+
+    const rows = buildExportedRows(sourceRows, 'created_at');
+    if (!rows.length) return toast.error('No transfer rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'transfer-requests', sheetName: 'TransferRequests', rows });
     exportRowsToPdf({
