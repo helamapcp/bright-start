@@ -478,7 +478,7 @@ export default function StockOperatorFlowPanel() {
         })}
       </div>
 
-      <Card>
+      <Card id="mixer-capacity-section">
         <CardHeader>
           <CardTitle className="text-base">End-to-end flow validation</CardTitle>
           <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
