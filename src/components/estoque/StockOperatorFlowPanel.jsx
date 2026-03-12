@@ -384,22 +384,27 @@ export default function StockOperatorFlowPanel() {
   };
 
   const exportSeparationOrders = () => {
-    const rows = separationOrders.map((order) => {
+    const sourceRows = separationOrders.map((order) => {
       const request = transferRequests.find((item) => item.id === order.requestId);
       return {
         order_id: order.id,
         request_id: order.requestId,
         requested_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.requestedSacks || 0), 0),
         dispatched_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.dispatchSacks || 0), 0),
+        material: (order.lines || []).map((line) => line.materialName).join('; '),
         justifications: (order.lines || [])
           .filter((line) => line.justification)
           .map((line) => `${line.materialName}: ${line.justification}`)
           .join(' | '),
         operator: currentUser?.full_name || 'Frontend Local',
+        machine: request?.mixer || '—',
         timestamp: order.completedAt || order.createdAt,
         op_number: request?.opNumber || '—',
       };
     });
+
+    const rows = buildExportedRows(sourceRows, 'timestamp');
+    if (!rows.length) return toast.error('No separation order rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'separation-orders', sheetName: 'SeparationOrders', rows });
     exportRowsToPdf({
