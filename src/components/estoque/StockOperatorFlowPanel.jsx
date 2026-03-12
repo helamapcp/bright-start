@@ -556,6 +556,27 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mixer utilization dashboard</CardTitle>
+          <CardDescription>Capacity vs scheduled load with overload warning.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {mixerUtilization.map((item) => (
+            <div key={item.mixerName} className="rounded-md border border-border p-3 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium">{item.mixerName}</p>
+                {item.overload && <Badge variant="destructive">Overload</Badge>}
+              </div>
+              <p className="text-xs text-muted-foreground">Capacity: {formatNumber(item.capacityKg)} kg</p>
+              <p className="text-xs text-muted-foreground">Scheduled: {formatNumber(item.scheduledKg)} kg</p>
+              <p className="text-xs text-muted-foreground">Utilization: {formatNumber(item.utilizationPct)}%</p>
+              <p className="text-xs text-muted-foreground">Remaining: {formatNumber(item.remainingKg)} kg</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       <Card id="stock-summary-section">
         <CardHeader>
           <CardTitle className="text-base">Stock snapshot by location</CardTitle>
