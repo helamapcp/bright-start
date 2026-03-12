@@ -21,7 +21,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           event_type: string
-          factory_id: string | null
+          factory_id: string
           id: string
           payload: Json | null
           tenant_id: string
@@ -32,7 +32,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           event_type: string
-          factory_id?: string | null
+          factory_id: string
           id?: string
           payload?: Json | null
           tenant_id: string
@@ -43,7 +43,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           event_type?: string
-          factory_id?: string | null
+          factory_id?: string
           id?: string
           payload?: Json | null
           tenant_id?: string
