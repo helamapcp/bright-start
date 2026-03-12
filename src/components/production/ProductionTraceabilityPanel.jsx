@@ -137,6 +137,7 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
           <div className="space-y-1"><Label>Start</Label><Input type="date" value={exportFilters.startDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, startDate: event.target.value }))} /></div>
           <div className="space-y-1"><Label>End</Label><Input type="date" value={exportFilters.endDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, endDate: event.target.value }))} /></div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label>Bag code</Label>
             <Input
