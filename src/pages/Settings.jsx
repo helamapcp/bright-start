@@ -591,9 +591,21 @@ export default function Settings() {
         }
     }, []);
 
+
     useEffect(() => {
-        localStorage.setItem(MACHINE_CATEGORY_STORAGE_KEY, JSON.stringify(machineCategories));
-    }, [machineCategories]);
+        try {
+            const raw = sessionStorage.getItem(MACHINE_CATEGORY_COLLAPSE_STORAGE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') setCollapsedMachineCategories(parsed);
+        } catch {
+            // ignore malformed session storage
+        }
+    }, []);
+
+    useEffect(() => {
+        sessionStorage.setItem(MACHINE_CATEGORY_COLLAPSE_STORAGE_KEY, JSON.stringify(collapsedMachineCategories));
+    }, [collapsedMachineCategories]);
 
     const addMachineCategory = () => {
         const name = newMachineCategory.trim();
