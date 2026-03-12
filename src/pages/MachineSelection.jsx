@@ -37,11 +37,7 @@ export default function MachineSelection() {
     const [search, setSearch] = useState('');
     const [selectedMachine, setSelectedMachine] = useState(null);
     const [showShiftModal, setShowShiftModal] = useState(false);
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        base44.auth.me().then(setUser).catch(() => { });
-    }, []);
+    const { currentUser } = useUsersStore();
 
     const { data: machines = [], isLoading: loadingMachines, refetch: refetchMachines } = useQuery({
         queryKey: ['machines'],
