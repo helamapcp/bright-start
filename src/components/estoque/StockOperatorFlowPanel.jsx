@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useUsersStore } from '@/lib/userStore';
 import { useInventoryStore } from '@/lib/inventoryStore';
 import { computeScheduledSuggestions, useOperatorFlowStore } from '@/lib/operatorFlowStore';
-import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import { applyExportPreset, exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 import TransferTimeline from '@/components/estoque/TransferTimeline';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ const toDayKey = (dateLike) => {
 };
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
+const normalizeLocation = (value) => String(value || '').trim().toLowerCase();
 
 const buildMaterialOptionValue = (material) => `${material.id}::${material.nome}`;
 
@@ -72,6 +73,14 @@ export default function StockOperatorFlowPanel() {
 
   const [selectedTransferId, setSelectedTransferId] = useState('');
   const [mixerDrafts, setMixerDrafts] = useState({});
+  const [exportFilters, setExportFilters] = useState({
+    preset: 'all',
+    startDate: '',
+    endDate: '',
+    opNumber: '',
+    machine: '',
+    material: '',
+  });
 
   const { data: formulacoes = [] } = useQuery({
     queryKey: ['formulacoes'],
@@ -92,6 +101,25 @@ export default function StockOperatorFlowPanel() {
     () => Object.values(mixerConfigs || {}).sort((a, b) => String(a.mixerName).localeCompare(String(b.mixerName))),
     [mixerConfigs]
   );
+
+  const mixerUtilization = useMemo(() => {
+    return mixerConfigList.map((config) => {
+      const scheduledKg = transferRequests
+        .filter((request) => request.destinationLocation === 'PMP' && normalizeLocation(request.mixer) === normalizeLocation(config.mixerName))
+        .reduce((sum, request) => sum + Number(request.totalRequiredKg || request.totalKg || 0), 0);
+
+      const capacityKg = Number(config.maxKg || 0);
+      const utilizationPct = capacityKg > 0 ? (scheduledKg / capacityKg) * 100 : 0;
+      return {
+        mixerName: config.mixerName,
+        capacityKg,
+        scheduledKg,
+        utilizationPct,
+        remainingKg: capacityKg - scheduledKg,
+        overload: scheduledKg > capacityKg && capacityKg > 0,
+      };
+    });
+  }, [mixerConfigList, transferRequests]);
 
   const consistencyReport = useMemo(
     () => validateFlowConsistency(summaryByLocation),
@@ -295,8 +323,30 @@ export default function StockOperatorFlowPanel() {
     }
   };
 
+  const handleExportFilterChange = (key, value) => {
+    setExportFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const getAlertBadgeVariant = (severity) => {
+    if (severity === 'error') return 'destructive';
+    if (severity === 'warn') return 'secondary';
+    return 'outline';
+  };
+
+  const openAlertRecord = (alert) => {
+    if (alert?.recordType === 'transfer' && alert?.recordId) {
+      setSelectedTransferId(alert.recordId);
+    }
+
+    if (alert?.anchorId) {
+      document.getElementById(alert.anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const buildExportedRows = (rows, dateField) => applyExportPreset({ ...exportFilters, rows, dateField });
+
   const exportTransferRequests = () => {
-    const rows = transferRequests.map((request) => ({
+    const sourceRows = transferRequests.map((request) => ({
       transfer_id: request.id,
       op_number: request.opNumber,
       source_location: request.sourceLocation,
@@ -306,9 +356,13 @@ export default function StockOperatorFlowPanel() {
         .join('; '),
       quantities_kg: formatNumber(request.totalKg),
       quantities_sacks: request.totalSacks,
+      machine: request.mixer,
       status: request.status,
       created_at: request.createdAt,
     }));
+
+    const rows = buildExportedRows(sourceRows, 'created_at');
+    if (!rows.length) return toast.error('No transfer rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'transfer-requests', sheetName: 'TransferRequests', rows });
     exportRowsToPdf({
@@ -330,22 +384,27 @@ export default function StockOperatorFlowPanel() {
   };
 
   const exportSeparationOrders = () => {
-    const rows = separationOrders.map((order) => {
+    const sourceRows = separationOrders.map((order) => {
       const request = transferRequests.find((item) => item.id === order.requestId);
       return {
         order_id: order.id,
         request_id: order.requestId,
         requested_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.requestedSacks || 0), 0),
         dispatched_sacks: (order.lines || []).reduce((sum, line) => sum + Number(line.dispatchSacks || 0), 0),
+        material: (order.lines || []).map((line) => line.materialName).join('; '),
         justifications: (order.lines || [])
           .filter((line) => line.justification)
           .map((line) => `${line.materialName}: ${line.justification}`)
           .join(' | '),
         operator: currentUser?.full_name || 'Frontend Local',
+        machine: request?.mixer || '—',
         timestamp: order.completedAt || order.createdAt,
         op_number: request?.opNumber || '—',
       };
     });
+
+    const rows = buildExportedRows(sourceRows, 'timestamp');
+    if (!rows.length) return toast.error('No separation order rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'separation-orders', sheetName: 'SeparationOrders', rows });
     exportRowsToPdf({
@@ -366,15 +425,20 @@ export default function StockOperatorFlowPanel() {
   };
 
   const exportProductionOps = () => {
-    const rows = generatedOps.map((op) => ({
+    const sourceRows = generatedOps.map((op) => ({
       op_number: op.opNumber,
       mixer: op.mixer,
+      machine: op.mixer,
       shift: op.shift,
       formulation: op.formulationName,
+      material: op.formulationName,
       total_kg: formatNumber(op.totalKg),
       created_at: op.createdAt,
       status: op.status,
     }));
+
+    const rows = buildExportedRows(sourceRows, 'created_at');
+    if (!rows.length) return toast.error('No OP rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'production-ops', sheetName: 'ProductionOPs', rows });
     exportRowsToPdf({
@@ -414,7 +478,7 @@ export default function StockOperatorFlowPanel() {
         })}
       </div>
 
-      <Card>
+      <Card id="flow-validation-section">
         <CardHeader>
           <CardTitle className="text-base">End-to-end flow validation</CardTitle>
           <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
@@ -429,9 +493,15 @@ export default function StockOperatorFlowPanel() {
             <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
           </div>
           {!consistencyReport.ok && (
-            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-1">
-              {consistencyReport.issues.map((issue) => (
-                <p key={issue} className="text-muted-foreground">• {issue}</p>
+            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-2">
+              {consistencyReport.alerts?.map((alert) => (
+                <div key={alert.id} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getAlertBadgeVariant(alert.severity)}>{alert.severity}</Badge>
+                    <p className="text-muted-foreground">{alert.description}</p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => openAlertRecord(alert)}>Open</Button>
+                </div>
               ))}
             </div>
           )}
@@ -487,6 +557,27 @@ export default function StockOperatorFlowPanel() {
       </Card>
 
       <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mixer utilization dashboard</CardTitle>
+          <CardDescription>Capacity vs scheduled load with overload warning.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {mixerUtilization.map((item) => (
+            <div key={item.mixerName} className="rounded-md border border-border p-3 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium">{item.mixerName}</p>
+                {item.overload && <Badge variant="destructive">Overload</Badge>}
+              </div>
+              <p className="text-xs text-muted-foreground">Capacity: {formatNumber(item.capacityKg)} kg</p>
+              <p className="text-xs text-muted-foreground">Scheduled: {formatNumber(item.scheduledKg)} kg</p>
+              <p className="text-xs text-muted-foreground">Utilization: {formatNumber(item.utilizationPct)}%</p>
+              <p className="text-xs text-muted-foreground">Remaining: {formatNumber(item.remainingKg)} kg</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card id="stock-summary-section">
         <CardHeader>
           <CardTitle className="text-base">Stock snapshot by location</CardTitle>
         </CardHeader>
@@ -675,6 +766,46 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Advanced export presets</CardTitle>
+          <CardDescription>Use Last 7/30 days, OP, machine, material, or date range before exporting.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+          <div className="space-y-1.5">
+            <Label>Preset</Label>
+            <Select value={exportFilters.preset} onValueChange={(value) => handleExportFilterChange('preset', value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All data</SelectItem>
+                <SelectItem value="last7">Last 7 days</SelectItem>
+                <SelectItem value="last30">Last 30 days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>OP number</Label>
+            <Input value={exportFilters.opNumber} onChange={(event) => handleExportFilterChange('opNumber', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Machine / Mixer</Label>
+            <Input value={exportFilters.machine} onChange={(event) => handleExportFilterChange('machine', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Material</Label>
+            <Input value={exportFilters.material} onChange={(event) => handleExportFilterChange('material', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Start</Label>
+            <Input type="date" value={exportFilters.startDate} onChange={(event) => handleExportFilterChange('startDate', event.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>End</Label>
+            <Input type="date" value={exportFilters.endDate} onChange={(event) => handleExportFilterChange('endDate', event.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="scheduled-transfers-section">
+        <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <CardTitle className="text-base">Scheduled PCP → PMP transfers</CardTitle>
@@ -724,7 +855,7 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="transfer-requests-section">
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="text-base">Transfer requests and generated OPs</CardTitle>
@@ -800,7 +931,7 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="separation-orders-section">
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>

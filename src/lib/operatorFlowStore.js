@@ -105,12 +105,13 @@ const flattenPlanning = (planningByDay) =>
       return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
     });
 
-const buildTransferEvent = ({ requestId, userName, action, location, details, timestamp }) => ({
+const buildTransferEvent = ({ requestId, userName, action, location, details, timestamp, eventType }) => ({
   id: makeId('evt'),
   requestId,
   timestamp: timestamp || new Date().toISOString(),
   userName: userName || 'Frontend Local',
   action,
+  eventType: eventType || 'other',
   location,
   details: details || '',
 });
@@ -337,12 +338,14 @@ export const useOperatorFlowStore = () => {
         userName,
         location: `${sourceLocation}→${destinationLocation}`,
         action: 'Transfer request created',
+        eventType: 'request_created',
       }),
       buildTransferEvent({
         requestId: transferRequest.id,
         userName,
         location: destinationLocation,
         action: `OP generated (${op.opNumber})`,
+        eventType: 'op_generated',
       }),
     ];
 
@@ -400,12 +403,14 @@ export const useOperatorFlowStore = () => {
         userName,
         location: request.sourceLocation,
         action: `Separation order generated (${order.id.slice(0, 8)})`,
+        eventType: 'separation_order_created',
       }),
       buildTransferEvent({
         requestId,
         userName,
         location: request.sourceLocation,
         action: 'Separation started',
+        eventType: 'separation_started',
       }),
     ];
 
@@ -487,6 +492,7 @@ export const useOperatorFlowStore = () => {
           userName,
           location: request.sourceLocation,
           action: 'Separation completed',
+          eventType: 'separation_completed',
           timestamp,
         }),
         ...(prev.transferEvents || []),
@@ -507,8 +513,19 @@ export const useOperatorFlowStore = () => {
     return { order, request };
   };
 
-  const appendTransferEvent = ({ requestId, action, location, userName, details, timestamp }) => {
+  const appendTransferEvent = ({ requestId, action, location, userName, details, timestamp, eventType }) => {
     if (!requestId || !action) return;
+
+    const normalizedAction = String(action).toLowerCase();
+    const inferredType =
+      eventType ||
+      (normalizedAction.includes('stock transfer posted')
+        ? 'stock_transfer_posted'
+        : normalizedAction.includes('materials received')
+          ? 'material_received'
+          : normalizedAction.includes('separation completed')
+            ? 'separation_completed'
+            : 'other');
 
     setState((prev) => ({
       ...prev,
@@ -520,6 +537,7 @@ export const useOperatorFlowStore = () => {
           userName,
           details,
           timestamp,
+          eventType: inferredType,
         }),
         ...(prev.transferEvents || []),
       ],
@@ -552,7 +570,19 @@ export const useOperatorFlowStore = () => {
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   const validateFlowConsistency = (stockSummaryByLocation = {}) => {
-    const issues = [];
+    const alerts = [];
+
+    const addAlert = ({ severity = 'warn', description, recordType, recordId, anchorId }) => {
+      alerts.push({
+        id: makeId('alert'),
+        severity,
+        description,
+        recordType,
+        recordId,
+        anchorId: anchorId || 'flow-validation-section',
+        link: recordId ? `${recordType}:${recordId}` : recordType || 'flow',
+      });
+    };
 
     (state.transferRequests || []).forEach((request) => {
       const requestMaterials = Array.isArray(request.materials) ? request.materials : [];
@@ -560,29 +590,69 @@ export const useOperatorFlowStore = () => {
       const expectedKg = requestMaterials.reduce((sum, item) => sum + Number(item.newlyDrawnKg || item.requiredKg || 0), 0);
 
       if (Math.abs(expectedSacks - Number(request.totalSacks || 0)) > 0.01) {
-        issues.push(`Request ${request.opNumber}: total sacks mismatch.`);
+        addAlert({
+          severity: 'error',
+          description: `Transfer ${request.opNumber}: total sacks mismatch.`,
+          recordType: 'transfer',
+          recordId: request.id,
+          anchorId: 'transfer-requests-section',
+        });
       }
 
       if (Math.abs(expectedKg - Number(request.totalKg || 0)) > 0.1) {
-        issues.push(`Request ${request.opNumber}: total kg mismatch.`);
+        addAlert({
+          severity: 'error',
+          description: `Transfer ${request.opNumber}: total kg mismatch.`,
+          recordType: 'transfer',
+          recordId: request.id,
+          anchorId: 'transfer-requests-section',
+        });
       }
 
       requestMaterials.forEach((material) => {
         const expectedFromSacks = Number(material.newSacks || 0) * Number(material.sackKg || 25);
         if (Math.abs(expectedFromSacks - Number(material.newlyDrawnKg || 0)) > 0.1) {
-          issues.push(`Request ${request.opNumber}: sack-to-kg mismatch for ${material.materialName}.`);
+          addAlert({
+            severity: 'error',
+            description: `Transfer ${request.opNumber}: sack↔kg mismatch for ${material.materialName}.`,
+            recordType: 'transfer',
+            recordId: request.id,
+            anchorId: 'transfer-requests-section',
+          });
         }
+
         if (Number(material.expectedPmpLeftoverKg || 0) < -0.1) {
-          issues.push(`Request ${request.opNumber}: negative PMP leftover for ${material.materialName}.`);
+          addAlert({
+            severity: 'warn',
+            description: `Transfer ${request.opNumber}: negative PMP leftover for ${material.materialName}.`,
+            recordType: 'transfer',
+            recordId: request.id,
+            anchorId: 'transfer-requests-section',
+          });
         }
       });
 
-      if (request.status === 'completed') {
-        const hasCompletedOrder = (state.separationOrders || []).some(
-          (order) => order.requestId === request.id && order.status === 'completed'
-        );
-        if (!hasCompletedOrder) {
-          issues.push(`Request ${request.opNumber}: completed without a completed separation order.`);
+      const linkedOrder = (state.separationOrders || []).find((order) => order.requestId === request.id);
+      if (request.status === 'completed' && (!linkedOrder || linkedOrder.status !== 'completed')) {
+        addAlert({
+          severity: 'error',
+          description: `Transfer ${request.opNumber}: completed without a completed separation order.`,
+          recordType: 'separation_order',
+          recordId: linkedOrder?.id,
+          anchorId: 'separation-orders-section',
+        });
+      }
+
+      if (linkedOrder) {
+        const dispatchedKg = (linkedOrder.lines || []).reduce((sum, line) => sum + Number(line.dispatchKg || 0), 0);
+        if (Math.abs(dispatchedKg - Number(request.totalKg || 0)) > 0.1) {
+          addAlert({
+            severity: 'warn',
+            description: `Transfer ${request.opNumber}: transfer quantity differs from separated quantity.`,
+            recordType: 'separation_order',
+            recordId: linkedOrder.id,
+            anchorId: 'separation-orders-section',
+          });
         }
       }
     });
@@ -591,7 +661,13 @@ export const useOperatorFlowStore = () => {
       (order.lines || []).forEach((line) => {
         const expectedKg = Number(line.dispatchSacks || 0) * Number(line.sackKg || 25);
         if (Math.abs(expectedKg - Number(line.dispatchKg || 0)) > 0.1) {
-          issues.push(`Order ${order.id.slice(0, 8)}: dispatch kg mismatch for ${line.materialName}.`);
+          addAlert({
+            severity: 'warn',
+            description: `Separation ${order.id.slice(0, 8)}: dispatch kg mismatch for ${line.materialName}.`,
+            recordType: 'separation_order',
+            recordId: order.id,
+            anchorId: 'separation-orders-section',
+          });
         }
       });
     });
@@ -599,10 +675,35 @@ export const useOperatorFlowStore = () => {
     const opSet = new Set((state.generatedOps || []).map((op) => op.opNumber));
     (state.bagTraceability || []).forEach((record) => {
       if (!record.opNumber || !opSet.has(record.opNumber)) {
-        issues.push(`Bag ${record.bagCode || record.id}: missing valid OP link.`);
+        addAlert({
+          severity: 'error',
+          description: `Bag ${record.bagCode || record.id}: missing valid OP link.`,
+          recordType: 'bag_traceability',
+          recordId: record.id,
+          anchorId: 'bag-traceability-section',
+        });
       }
       if (!record.machineId) {
-        issues.push(`Bag ${record.bagCode || record.id}: missing machine link.`);
+        addAlert({
+          severity: 'warn',
+          description: `Bag ${record.bagCode || record.id}: missing machine link.`,
+          recordType: 'bag_traceability',
+          recordId: record.id,
+          anchorId: 'bag-traceability-section',
+        });
+      }
+    });
+
+    (state.generatedOps || []).forEach((op) => {
+      const hasBagRecords = (state.bagTraceability || []).some((record) => record.opNumber === op.opNumber);
+      if (!hasBagRecords) {
+        addAlert({
+          severity: 'info',
+          description: `OP ${op.opNumber}: no bag traceability records yet.`,
+          recordType: 'op',
+          recordId: op.id,
+          anchorId: 'transfer-requests-section',
+        });
       }
     });
 
@@ -610,13 +711,20 @@ export const useOperatorFlowStore = () => {
       const locationSummary = stockSummaryByLocation?.[location];
       const total = Number(locationSummary?.totalQuantity || 0);
       if (Number.isFinite(total) && total < -0.1) {
-        issues.push(`Stock balance is negative in ${location}.`);
+        addAlert({
+          severity: 'error',
+          description: `Negative stock detected in ${location}.`,
+          recordType: 'stock_balance',
+          recordId: location,
+          anchorId: 'stock-summary-section',
+        });
       }
     });
 
     return {
-      ok: issues.length === 0,
-      issues,
+      ok: alerts.length === 0,
+      alerts,
+      issues: alerts.map((alert) => alert.description),
       checkedAt: new Date().toISOString(),
     };
   };

@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { canAccessPage, getRoleLabel } from '@/lib/rbac';
 import { useUsersStore } from '@/lib/userStore';
+import { clearFrontendAuthSession } from '@/lib/frontendAuth';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -44,7 +45,8 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const handleLogout = () => {
-    window.location.href = '/';
+    clearFrontendAuthSession();
+    window.location.href = '/login';
   };
 
   const FACTORY_FLOOR_PAGES = ['Production', 'BagTransfer', 'MachineConsumption'];
@@ -129,7 +131,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
           <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
-            Voltar ao preview
+            Ir para login
           </Button>
         </div>
       </aside>

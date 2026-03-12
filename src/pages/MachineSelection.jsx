@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,8 @@ import MachineCard from "@/components/production/MachineCard";
 import ShiftSelector from "@/components/production/ShiftSelector";
 import { cn } from "@/lib/utils";
 import { normalizeRole, ROLE_IDS, getRoleLabel } from '@/lib/rbac';
+import { useUsersStore } from '@/lib/userStore';
+import { clearFrontendAuthSession } from '@/lib/frontendAuth';
 
 // Identifica turno atual baseado na hora
 function detectCurrentShift(shifts) {
@@ -35,11 +37,7 @@ export default function MachineSelection() {
     const [search, setSearch] = useState('');
     const [selectedMachine, setSelectedMachine] = useState(null);
     const [showShiftModal, setShowShiftModal] = useState(false);
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        base44.auth.me().then(setUser).catch(() => { });
-    }, []);
+    const { currentUser } = useUsersStore();
 
     const { data: machines = [], isLoading: loadingMachines, refetch: refetchMachines } = useQuery({
         queryKey: ['machines'],
@@ -66,7 +64,7 @@ export default function MachineSelection() {
 
     const handleMachineSelect = (machine) => {
         setSelectedMachine(machine);
-        const normalizedRole = normalizeRole(user?.role);
+        const normalizedRole = normalizeRole(currentUser?.role);
         if (normalizedRole === ROLE_IDS.MACHINE_OPERATOR) {
             const autoShift = detectCurrentShift(shifts);
             if (autoShift) {
@@ -82,7 +80,8 @@ export default function MachineSelection() {
     };
 
     const handleLogout = () => {
-        base44.auth.logout();
+        clearFrontendAuthSession();
+        navigate('/login', { replace: true });
     };
 
     const getMachineSession = (machineId) => {
@@ -113,12 +112,12 @@ export default function MachineSelection() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            {user && (
+                            {currentUser && (
                                 <div className="text-right mr-4">
-                                    <p className="text-sm font-medium text-slate-900">{user.full_name}</p>
+                                    <p className="text-sm font-medium text-slate-900">{currentUser.full_name}</p>
                                     <div className="flex items-center justify-end gap-2">
-                                        <Badge className="text-xs capitalize" variant="secondary">{getRoleLabel(user.role || ROLE_IDS.MACHINE_OPERATOR)}</Badge>
-                                        {normalizeRole(user.role) === ROLE_IDS.MACHINE_OPERATOR && shifts.length > 0 && (
+                                        <Badge className="text-xs capitalize" variant="secondary">{getRoleLabel(currentUser.role || ROLE_IDS.MACHINE_OPERATOR)}</Badge>
+                                        {normalizeRole(currentUser.role) === ROLE_IDS.MACHINE_OPERATOR && shifts.length > 0 && (
                                             <Badge variant="outline" className="text-xs flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />
                                                 {detectCurrentShift(shifts)?.name || '—'}

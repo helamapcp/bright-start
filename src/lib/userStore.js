@@ -7,9 +7,10 @@ const USERS_EVENT = 'frontend-users-updated';
 
 const DEFAULT_USERS = [
   {
-    id: 'local-user-1',
-    full_name: 'Frontend Local',
-    email: 'frontend@local.dev',
+    id: 'local-user-admin',
+    full_name: 'Production Planner Admin',
+    email: 'admin@test',
+    password: 'test123',
     role: ROLE_IDS.ADMIN,
     active: true,
   },
@@ -17,6 +18,7 @@ const DEFAULT_USERS = [
     id: 'local-user-gm',
     full_name: 'General Manager',
     email: 'gm@local.dev',
+    password: 'test123',
     role: ROLE_IDS.GENERAL_MANAGEMENT,
     active: true,
   },
@@ -24,20 +26,23 @@ const DEFAULT_USERS = [
     id: 'local-user-log',
     full_name: 'Logistics Manager',
     email: 'logistics@local.dev',
+    password: 'test123',
     role: ROLE_IDS.LOGISTICS_MANAGEMENT,
     active: true,
   },
   {
     id: 'local-user-stock',
     full_name: 'Stock Operator',
-    email: 'stock@local.dev',
+    email: 'stock.operator@test',
+    password: 'test123',
     role: ROLE_IDS.STOCK_OPERATOR,
     active: true,
   },
   {
     id: 'local-user-machine',
     full_name: 'Machine Operator',
-    email: 'machine@local.dev',
+    email: 'machine.operator@test',
+    password: 'test123',
     role: ROLE_IDS.MACHINE_OPERATOR,
     active: true,
   },
@@ -64,7 +69,8 @@ const sanitizeUsers = (users) => {
     .map((user) => ({
       id: user.id || makeId(),
       full_name: String(user.full_name),
-      email: String(user.email),
+      email: String(user.email).trim().toLowerCase(),
+      password: String(user.password || 'test123'),
       role: normalizeRole(user.role || ROLE_IDS.MACHINE_OPERATOR),
       active: user.active !== false,
     }));
@@ -85,8 +91,8 @@ const persistUsers = (users) => {
 };
 
 const readCurrentUserId = () => {
-  if (typeof window === 'undefined') return 'local-user-1';
-  return window.localStorage.getItem(ACTIVE_USER_STORAGE_KEY) || 'local-user-1';
+  if (typeof window === 'undefined') return 'local-user-admin';
+  return window.localStorage.getItem(ACTIVE_USER_STORAGE_KEY) || 'local-user-admin';
 };
 
 const persistCurrentUserId = (userId) => {
@@ -149,6 +155,7 @@ export const useUsersStore = () => {
       id: makeId(),
       full_name: String(full_name || '').trim(),
       email: normalizedEmail,
+      password: 'test123',
       role: normalizeRole(role || ROLE_IDS.MACHINE_OPERATOR),
       active: true,
     };
@@ -186,7 +193,7 @@ export const useUsersStore = () => {
 
     if (!active && userId === currentUserId) {
       const nextActive = users.find((user) => user.id !== userId && user.active !== false);
-      setCurrentUserId(nextActive?.id || 'local-user-1');
+      setCurrentUserId(nextActive?.id || 'local-user-admin');
     }
 
     return updated;
@@ -200,7 +207,7 @@ export const useUsersStore = () => {
 
     if (currentUserId === userId) {
       const nextActive = users.find((user) => user.id !== userId && user.active !== false);
-      setCurrentUserId(nextActive?.id || 'local-user-1');
+      setCurrentUserId(nextActive?.id || 'local-user-admin');
     }
 
     return target;
@@ -223,6 +230,21 @@ export const useUsersStore = () => {
     deleteUser,
     switchCurrentUser,
   };
+};
+
+export const authenticateFrontendUser = ({ email, password }) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedPassword = String(password || '');
+  const users = readUsers();
+
+  return (
+    users.find(
+      (user) =>
+        user.active !== false &&
+        String(user.email || '').toLowerCase() === normalizedEmail &&
+        String(user.password || '') === normalizedPassword
+    ) || null
+  );
 };
 
 export { USERS_STORAGE_KEY, ACTIVE_USER_STORAGE_KEY };

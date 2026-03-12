@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOperatorFlowStore } from '@/lib/operatorFlowStore';
-import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import { applyExportPreset, exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
 
@@ -21,6 +21,14 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
     rawMaterialName: '',
     rawMaterialKg: '',
     notes: '',
+  });
+  const [exportFilters, setExportFilters] = useState({
+    preset: 'all',
+    startDate: '',
+    endDate: '',
+    opNumber: '',
+    machine: '',
+    material: '',
   });
 
   const scopedRecords = useMemo(
@@ -74,7 +82,7 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
   };
 
   const exportBagTraceability = () => {
-    const rows = scopedRecords.map((record) => ({
+    const sourceRows = scopedRecords.map((record) => ({
       bag_code: record.bagCode,
       op_number: record.opNumber,
       machine: record.machineCode || record.machineName || '—',
@@ -82,8 +90,12 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
       raw_material_used: (record.rawMaterials || [])
         .map((material) => `${material.name} (${formatNumber(material.kg)}kg)`)
         .join('; '),
+      material: (record.rawMaterials || []).map((material) => material.name).join('; '),
       timestamp: record.createdAt,
     }));
+
+    const rows = applyExportPreset({ ...exportFilters, rows: sourceRows, dateField: 'timestamp' });
+    if (!rows.length) return toast.error('No traceability rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'bag-traceability', sheetName: 'BagTraceability', rows });
     exportRowsToPdf({
@@ -113,7 +125,18 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4" id="bag-traceability-section">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-2">
+          <div className="space-y-1">
+            <Label>Preset</Label>
+            <Input value={exportFilters.preset} onChange={(event) => setExportFilters((prev) => ({ ...prev, preset: event.target.value || 'all' }))} placeholder="all | last7 | last30" />
+          </div>
+          <div className="space-y-1"><Label>OP</Label><Input value={exportFilters.opNumber} onChange={(event) => setExportFilters((prev) => ({ ...prev, opNumber: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Machine</Label><Input value={exportFilters.machine} onChange={(event) => setExportFilters((prev) => ({ ...prev, machine: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Material</Label><Input value={exportFilters.material} onChange={(event) => setExportFilters((prev) => ({ ...prev, material: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Start</Label><Input type="date" value={exportFilters.startDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, startDate: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>End</Label><Input type="date" value={exportFilters.endDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, endDate: event.target.value }))} /></div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label>Bag code</Label>
