@@ -88,6 +88,16 @@ export default function StockOperatorFlowPanel() {
     [formulacoes, materiais, selectedDayKey]
   );
 
+  const mixerConfigList = useMemo(
+    () => Object.values(mixerConfigs || {}).sort((a, b) => String(a.mixerName).localeCompare(String(b.mixerName))),
+    [mixerConfigs]
+  );
+
+  const consistencyReport = useMemo(
+    () => validateFlowConsistency(summaryByLocation),
+    [summaryByLocation, validateFlowConsistency, transferRequests, separationOrders, generatedOps, bagTraceability]
+  );
+
   const summaryCards = [
     {
       label: 'Transferências pendentes',
