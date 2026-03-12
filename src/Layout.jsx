@@ -92,7 +92,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
             <div className={cn('min-w-0', sidebarCollapsed && 'lg:hidden')}>
               <h1 className="font-bold truncate">PVC Production</h1>
-              <p className="text-xs text-muted-foreground truncate">Modo Frontend</p>
+              <p className="text-xs text-muted-foreground truncate">Plataforma MES</p>
             </div>
           </div>
 

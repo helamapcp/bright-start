@@ -5,6 +5,7 @@ import { useUsersStore } from '@/lib/userStore';
 import { useInventoryStore } from '@/lib/inventoryStore';
 import { computeScheduledSuggestions, useOperatorFlowStore } from '@/lib/operatorFlowStore';
 import { applyExportPreset, exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import { isDevelopmentMode } from '@/lib/environment';
 import TransferTimeline from '@/components/estoque/TransferTimeline';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -396,7 +397,7 @@ export default function StockOperatorFlowPanel() {
           .filter((line) => line.justification)
           .map((line) => `${line.materialName}: ${line.justification}`)
           .join(' | '),
-        operator: currentUser?.full_name || 'Frontend Local',
+        operator: currentUser?.full_name || 'Operador',
         machine: request?.mixer || '—',
         timestamp: order.completedAt || order.createdAt,
         op_number: request?.opNumber || '—',
@@ -478,35 +479,37 @@ export default function StockOperatorFlowPanel() {
         })}
       </div>
 
-      <Card id="flow-validation-section">
-        <CardHeader>
-          <CardTitle className="text-base">End-to-end flow validation</CardTitle>
-          <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            {consistencyReport.ok ? (
-              <Badge variant="secondary">Flow consistent</Badge>
-            ) : (
-              <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Issues found</Badge>
-            )}
-            <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
-          </div>
-          {!consistencyReport.ok && (
-            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-2">
-              {consistencyReport.alerts?.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getAlertBadgeVariant(alert.severity)}>{alert.severity}</Badge>
-                    <p className="text-muted-foreground">{alert.description}</p>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => openAlertRecord(alert)}>Open</Button>
-                </div>
-              ))}
+      {isDevelopmentMode && (
+        <Card id="flow-validation-section">
+          <CardHeader>
+            <CardTitle className="text-base">End-to-end flow validation</CardTitle>
+            <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              {consistencyReport.ok ? (
+                <Badge variant="secondary">Flow consistent</Badge>
+              ) : (
+                <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Issues found</Badge>
+              )}
+              <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {!consistencyReport.ok && (
+              <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-2">
+                {consistencyReport.alerts?.map((alert) => (
+                  <div key={alert.id} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={getAlertBadgeVariant(alert.severity)}>{alert.severity}</Badge>
+                      <p className="text-muted-foreground">{alert.description}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => openAlertRecord(alert)}>Open</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
