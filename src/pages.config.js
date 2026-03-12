@@ -57,7 +57,6 @@ import FactoryDashboard from './pages/FactoryDashboard';
 import MachineConsumption from './pages/MachineConsumption';
 import MachineSelection from './pages/MachineSelection';
 import Orders from './pages/Orders';
-import PATracking from './pages/PATracking';
 import PlanejamentoComposto from './pages/PlanejamentoComposto';
 import Production from './pages/Production';
 import Produtos from './pages/Produtos';
@@ -76,7 +75,6 @@ export const PAGES = {
     "MachineConsumption": MachineConsumption,
     "MachineSelection": MachineSelection,
     "Orders": Orders,
-    "PATracking": PATracking,
     "PlanejamentoComposto": PlanejamentoComposto,
     "Production": Production,
     "Produtos": Produtos,
