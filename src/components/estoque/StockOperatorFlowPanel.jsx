@@ -777,7 +777,7 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
-      <Card id="transfer-requests-section">
+      <Card id="scheduled-transfers-section">
         <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
