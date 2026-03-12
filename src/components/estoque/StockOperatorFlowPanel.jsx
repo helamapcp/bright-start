@@ -72,6 +72,14 @@ export default function StockOperatorFlowPanel() {
 
   const [selectedTransferId, setSelectedTransferId] = useState('');
   const [mixerDrafts, setMixerDrafts] = useState({});
+  const [exportFilters, setExportFilters] = useState({
+    preset: 'all',
+    startDate: '',
+    endDate: '',
+    opNumber: '',
+    machine: '',
+    material: '',
+  });
 
   const { data: formulacoes = [] } = useQuery({
     queryKey: ['formulacoes'],
