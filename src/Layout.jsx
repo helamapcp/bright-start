@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { canAccessPage, getRoleLabel } from '@/lib/rbac';
 import { useUsersStore } from '@/lib/userStore';
+import { clearFrontendAuthSession } from '@/lib/frontendAuth';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
