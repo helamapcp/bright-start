@@ -11,6 +11,7 @@ import { createPageUrl } from "@/utils";
 import MachineCard from "@/components/production/MachineCard";
 import ShiftSelector from "@/components/production/ShiftSelector";
 import { cn } from "@/lib/utils";
+import { normalizeRole, ROLE_IDS, getRoleLabel } from '@/lib/rbac';
 
 // Identifica turno atual baseado na hora
 function detectCurrentShift(shifts) {
