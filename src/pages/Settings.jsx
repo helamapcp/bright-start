@@ -1025,40 +1025,61 @@ export default function Settings() {
                                         Nova Máquina
                                     </Button>
                                 </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Código</TableHead>
-                                                <TableHead>Nome</TableHead>
-                                                <TableHead>Categoria</TableHead>
-                                                <TableHead>Setor</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Ações</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {machines.map(m => (
-                                                <TableRow key={m.id}>
-                                                    <TableCell className="font-semibold">{m.code}</TableCell>
-                                                    <TableCell>{m.name}</TableCell>
-                                                    <TableCell className="capitalize">{m.type}</TableCell>
-                                                    <TableCell>{m.sector}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline">{m.status}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
-                                                            <Trash2 className="w-4 h-4 text-red-500" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                <CardContent className="space-y-3">
+                                    {groupedMachines.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">Nenhuma máquina cadastrada.</p>
+                                    ) : groupedMachines.map(({ categoryName, machines: categoryMachines }) => {
+                                        const isCollapsed = collapsedMachineCategories[categoryName] !== false;
+                                        return (
+                                            <div key={categoryName} className="rounded-md border border-border overflow-hidden">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleMachineCategoryCollapse(categoryName)}
+                                                    className="w-full flex items-center justify-between px-4 py-3 text-left bg-muted/40 hover:bg-muted transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                        <span className="font-medium capitalize">{categoryName}</span>
+                                                    </div>
+                                                    <Badge variant="secondary">{categoryMachines.length}</Badge>
+                                                </button>
+
+                                                {!isCollapsed && (
+                                                    <div className="p-2 md:p-3">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>Código</TableHead>
+                                                                    <TableHead>Nome</TableHead>
+                                                                    <TableHead>Setor</TableHead>
+                                                                    <TableHead>Status</TableHead>
+                                                                    <TableHead className="text-right">Ações</TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {categoryMachines.map((m) => (
+                                                                    <TableRow key={m.id}>
+                                                                        <TableCell className="font-semibold">{m.code}</TableCell>
+                                                                        <TableCell>{m.name}</TableCell>
+                                                                        <TableCell>{m.sector}</TableCell>
+                                                                        <TableCell><Badge variant="outline">{m.status}</Badge></TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(m)}>
+                                                                                <Edit className="w-4 h-4" />
+                                                                            </Button>
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}>
+                                                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                                            </Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </CardContent>
                             </Card>
                         </div>
