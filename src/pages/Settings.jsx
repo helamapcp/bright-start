@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,13 +43,14 @@ import {
 } from "@/components/ui/table";
 import {
     Plus, Edit, Trash2, Factory, Clock, AlertTriangle,
-    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical, ClipboardList
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import ImportacaoMassa from "@/components/settings/ImportacaoMassa";
 import GestaoUsuarios from "@/components/settings/GestaoUsuarios";
 import MateriaPrimaTab from "@/components/settings/MateriaPrimaTab";
+import { appendSystemLog, useSystemLogs } from '@/lib/systemLog';
 
 // ─── Constantes Produto/Campos ───────────────────────────────────────────────
 const CATEGORIAS_PRODUTO = ['TELHA', 'FORRO', 'CUMEEIRA', 'PORTA', 'ACABAMENTO'];
@@ -438,6 +439,14 @@ export default function Settings() {
     const [editingCategoryName, setEditingCategoryName] = useState('');
     const [categoryToDelete, setCategoryToDelete] = useState(null);
 
+    const { logs: systemLogs, users: logUsers } = useSystemLogs();
+    const [logSearch, setLogSearch] = useState('');
+    const [logUserFilter, setLogUserFilter] = useState('all');
+    const [logActionFilter, setLogActionFilter] = useState('all');
+    const [logLocationFilter, setLogLocationFilter] = useState('all');
+    const [logDateFrom, setLogDateFrom] = useState('');
+    const [logDateTo, setLogDateTo] = useState('');
+
     // ── Produto state ──────────────────────────────────────────────
     const [prodSearch, setProdSearch] = useState('');
     const [showInactiveProd, setShowInactiveProd] = useState(false);
@@ -603,6 +612,12 @@ export default function Settings() {
             },
         ]);
         setNewMachineCategory('');
+        appendSystemLog({
+            action: 'Adicionar categoria de máquina',
+            action_type: 'add',
+            location: 'SETTINGS',
+            parameters: { category: name },
+        });
         toast.success('Categoria adicionada!');
     };
 
@@ -618,6 +633,7 @@ export default function Settings() {
             return;
         }
 
+        const currentCategory = machineCategories.find((category) => category.id === categoryId);
         const duplicate = machineCategories.some(
             (category) => category.id !== categoryId && normalizeCategoryName(category.name) === normalizeCategoryName(name)
         );
@@ -631,6 +647,12 @@ export default function Settings() {
         )));
         setEditingCategoryId(null);
         setEditingCategoryName('');
+        appendSystemLog({
+            action: 'Editar categoria de máquina',
+            action_type: 'edit',
+            location: 'SETTINGS',
+            parameters: { from: currentCategory?.name, to: name },
+        });
         toast.success('Categoria atualizada!');
     };
 
@@ -652,6 +674,12 @@ export default function Settings() {
             setEditingCategoryId(null);
             setEditingCategoryName('');
         }
+        appendSystemLog({
+            action: 'Remover categoria de máquina',
+            action_type: 'delete',
+            location: 'SETTINGS',
+            parameters: { category: categoryToDelete.name },
+        });
         setCategoryToDelete(null);
         toast.success('Categoria removida!');
     };
@@ -659,6 +687,27 @@ export default function Settings() {
     const getCategoryUsageCount = (categoryName) => (
         machines.filter((machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)).length
     );
+
+    const logLocations = useMemo(() => {
+        const unique = new Set(systemLogs.map((log) => log.location).filter(Boolean));
+        return Array.from(unique.values());
+    }, [systemLogs]);
+
+    const filteredLogs = useMemo(() => {
+        return systemLogs.filter((log) => {
+            const timestamp = new Date(log.timestamp);
+            const fromOk = !logDateFrom || timestamp >= new Date(`${logDateFrom}T00:00:00`);
+            const toOk = !logDateTo || timestamp <= new Date(`${logDateTo}T23:59:59`);
+            const userOk = logUserFilter === 'all' || log.user_name === logUserFilter;
+            const actionOk = logActionFilter === 'all' || log.action_type === logActionFilter;
+            const locationOk = logLocationFilter === 'all' || log.location === logLocationFilter;
+
+            const text = `${log.action || ''} ${log.user_name || ''} ${log.location || ''} ${JSON.stringify(log.parameters || {})}`.toLowerCase();
+            const searchOk = !logSearch.trim() || text.includes(logSearch.trim().toLowerCase());
+
+            return fromOk && toOk && userOk && actionOk && locationOk && searchOk;
+        });
+    }, [systemLogs, logDateFrom, logDateTo, logUserFilter, logActionFilter, logLocationFilter, logSearch]);
 
     const { data: shifts = [] } = useQuery({
         queryKey: ['settings-shifts'],
@@ -817,7 +866,7 @@ export default function Settings() {
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-8 w-full max-w-5xl">
+                    <TabsList className="grid grid-cols-9 w-full max-w-6xl">
                         <TabsTrigger value="machines" className="flex items-center gap-1.5">
                             <Factory className="w-4 h-4" />
                             Máquinas
@@ -849,6 +898,10 @@ export default function Settings() {
                         <TabsTrigger value="usuarios" className="flex items-center gap-1.5">
                             <Users className="w-4 h-4" />
                             Usuários
+                        </TabsTrigger>
+                        <TabsTrigger value="log" className="flex items-center gap-1.5">
+                            <ClipboardList className="w-4 h-4" />
+                            Log
                         </TabsTrigger>
                     </TabsList>
 
@@ -1278,6 +1331,95 @@ export default function Settings() {
                     {/* Usuários Tab */}
                     <TabsContent value="usuarios">
                         <GestaoUsuarios />
+                    </TabsContent>
+
+                    {/* Log Tab */}
+                    <TabsContent value="log">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Log do Sistema</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                                    <div className="md:col-span-2">
+                                        <Input
+                                            value={logSearch}
+                                            onChange={(e) => setLogSearch(e.target.value)}
+                                            placeholder="Buscar em ação, usuário, local e parâmetros"
+                                        />
+                                    </div>
+                                    <Select value={logUserFilter} onValueChange={setLogUserFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Usuário" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos usuários</SelectItem>
+                                            {logUsers.map((user) => (
+                                                <SelectItem key={user} value={user}>{user}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={logActionFilter} onValueChange={setLogActionFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Ação" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas ações</SelectItem>
+                                            {['create', 'update', 'delete', 'add', 'edit', 'adjustment', 'transfer', 'delivered', 'auth'].map((action) => (
+                                                <SelectItem key={action} value={action}>{action}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={logLocationFilter} onValueChange={setLogLocationFilter}>
+                                        <SelectTrigger><SelectValue placeholder="Local" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos locais</SelectItem>
+                                            {logLocations.map((location) => (
+                                                <SelectItem key={location} value={location}>{location}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input type="date" value={logDateFrom} onChange={(e) => setLogDateFrom(e.target.value)} />
+                                        <Input type="date" value={logDateTo} onChange={(e) => setLogDateTo(e.target.value)} />
+                                    </div>
+                                </div>
+
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Data/Hora</TableHead>
+                                            <TableHead>Usuário</TableHead>
+                                            <TableHead>Ação</TableHead>
+                                            <TableHead>Local</TableHead>
+                                            <TableHead>Parâmetros</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredLogs.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                    Nenhum registro encontrado com os filtros atuais.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : filteredLogs.map((log) => (
+                                            <TableRow key={log.id}>
+                                                <TableCell>{new Date(log.timestamp).toLocaleString('pt-BR')}</TableCell>
+                                                <TableCell>{log.user_name || '—'}</TableCell>
+                                                <TableCell>
+                                                    <div className="space-y-1">
+                                                        <Badge variant="outline">{log.action_type || 'action'}</Badge>
+                                                        <p className="text-sm">{log.action}</p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{log.location || '—'}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    <pre className="whitespace-pre-wrap break-words font-mono text-xs">
+                                                        {JSON.stringify(log.parameters || {}, null, 2)}
+                                                    </pre>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </Tabs>
 
