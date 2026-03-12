@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Package } from 'lucide-react';
 import EstoqueCD from '@/components/estoque/EstoqueCD.jsx';
 import EstoquePCP from '@/components/estoque/EstoquePCP.jsx';
@@ -32,21 +30,9 @@ export default function Estoque() {
           Gestão de Estoque
         </h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Fluxo: CD → PCP → PMP → Fábrica → Logística
+          Fluxo operacional: CD → PCP → PMP → Fábrica → Logística
         </p>
       </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Instruções de uso e build</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>1) Para desenvolvimento: <Badge variant="secondary">npm run dev</Badge></p>
-          <p>2) Para build padrão: <Badge variant="secondary">npm run build</Badge></p>
-          <p>3) Para build de desenvolvimento: <Badge variant="secondary">npm run build:dev</Badge></p>
-          <p>4) Valide abas CD, PCP, PMP, Fábrica e Logística para garantir carregamento correto.</p>
-        </CardContent>
-      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full h-auto">

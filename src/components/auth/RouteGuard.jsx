@@ -29,7 +29,7 @@ export default function RouteGuard({ children, pageName }) {
               <CardTitle>Authentication required</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">Sign in with a test user to continue.</p>
+              <p className="text-sm text-muted-foreground">Sign in to continue.</p>
               <Button asChild>
                 <Link to="/login">Go to login</Link>
               </Button>

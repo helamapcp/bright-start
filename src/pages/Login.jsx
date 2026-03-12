@@ -1,27 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import {
   ACTIVE_USER_STORAGE_KEY,
   USERS_STORAGE_KEY,
   readUsers,
 } from '@/lib/userStore';
-import { ROLE_IDS, getRoleLabel } from '@/lib/rbac';
-import { clearFrontendAuthSession, isFrontendAuthenticated, setFrontendAuthSession } from '@/lib/frontendAuth';
+import { ROLE_IDS } from '@/lib/rbac';
+import { isFrontendAuthenticated, setFrontendAuthSession } from '@/lib/frontendAuth';
 import { HOME_BY_ROLE } from '@/components/auth/RouteGuard';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-const TEST_USERS = [
-  { email: 'stock.operator@test', password: 'test123', label: 'Stock Operator' },
-  { email: 'machine.operator@test', password: 'test123', label: 'Machine Operator' },
-  { email: 'admin@test', password: 'test123', label: 'Production Planner Admin' },
-];
 
 const USERS_EVENT = 'frontend-users-updated';
 
@@ -45,7 +38,7 @@ const upsertFrontendUserCache = ({ id, email, full_name, role }) => {
   const normalizedEmail = String(email || '').trim().toLowerCase();
   const nextUser = {
     id,
-    full_name: String(full_name || normalizedEmail || 'Supabase User'),
+    full_name: String(full_name || normalizedEmail || 'User'),
     email: normalizedEmail,
     password: '',
     role,
@@ -71,13 +64,6 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const identifiedRole = useMemo(() => {
-    const user = readUsers().find(
-      (item) => String(item.email || '').toLowerCase() === String(form.email || '').trim().toLowerCase()
-    );
-    return user?.role || null;
-  }, [form.email]);
-
   React.useEffect(() => {
     if (!isFrontendAuthenticated()) return;
     const users = readUsers();
@@ -97,7 +83,7 @@ export default function Login() {
       });
 
       if (signInError || !signInData?.user) {
-        toast.error(signInError?.message || 'Invalid credentials.');
+        toast.error(signInError?.message || 'Credenciais inválidas.');
         return;
       }
 
@@ -127,26 +113,20 @@ export default function Login() {
         email: resolvedEmail,
       });
 
-      toast.success(`Logged in as ${resolvedName}.`);
+      toast.success(`Bem-vindo, ${resolvedName}.`);
       navigate(createPageUrl(HOME_BY_ROLE[role] || 'Dashboard'), { replace: true });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleResetSession = async () => {
-    await supabase.auth.signOut();
-    clearFrontendAuthSession();
-    toast.success('Session cleared.');
-  };
-
   return (
     <main className="min-h-screen bg-background text-foreground p-6 flex items-center justify-center">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">Login de teste (RBAC)</CardTitle>
+          <CardTitle className="text-2xl">Acesso ao sistema</CardTitle>
           <CardDescription>
-            Entre com usuário local de teste ou com credenciais reais do Supabase Auth.
+            Entre com suas credenciais para acessar a plataforma MES.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -157,49 +137,26 @@ export default function Login() {
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                placeholder="stock.operator@test"
+                placeholder="seu.email@empresa.com"
                 autoComplete="username"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Password</Label>
+              <Label>Senha</Label>
               <Input
                 type="password"
                 value={form.password}
                 onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                placeholder="test123"
+                placeholder="Digite sua senha"
                 autoComplete="current-password"
               />
             </div>
 
-            <div className="rounded-md border border-border p-3 text-sm">
-              <p className="text-muted-foreground mb-1">Role identified:</p>
-              {identifiedRole ? (
-                <Badge variant="secondary">{getRoleLabel(identifiedRole)}</Badge>
-              ) : (
-                <span className="text-muted-foreground">Será definido pelo Supabase se não for usuário local.</span>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
-              </Button>
-              <Button type="button" variant="outline" onClick={handleResetSession}>
-                Reset
-              </Button>
-            </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
+            </Button>
           </form>
-
-          <div className="rounded-md border border-border p-3 space-y-2">
-            <p className="text-sm font-medium">Test users</p>
-            {TEST_USERS.map((user) => (
-              <p key={user.email} className="text-xs text-muted-foreground">
-                {user.label}: <span className="font-medium text-foreground">{user.email}</span> / {user.password}
-              </p>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </main>
