@@ -478,7 +478,7 @@ export default function StockOperatorFlowPanel() {
         })}
       </div>
 
-      <Card id="mixer-capacity-section">
+      <Card id="flow-validation-section">
         <CardHeader>
           <CardTitle className="text-base">End-to-end flow validation</CardTitle>
           <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
@@ -493,9 +493,15 @@ export default function StockOperatorFlowPanel() {
             <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
           </div>
           {!consistencyReport.ok && (
-            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-1">
-              {consistencyReport.issues.map((issue) => (
-                <p key={issue} className="text-muted-foreground">• {issue}</p>
+            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-2">
+              {consistencyReport.alerts?.map((alert) => (
+                <div key={alert.id} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getAlertBadgeVariant(alert.severity)}>{alert.severity}</Badge>
+                    <p className="text-muted-foreground">{alert.description}</p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => openAlertRecord(alert)}>Open</Button>
+                </div>
               ))}
             </div>
           )}
