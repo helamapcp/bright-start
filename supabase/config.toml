@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.startProductionRun]
 verify_jwt = false
+
+[functions.registerProducedBag]
+verify_jwt = false
+
+[functions.consumeMaterial]
+verify_jwt = false
+
+[functions.calculateYield]
+verify_jwt = false
+
+[functions.calculateOEE]
+verify_jwt = false
