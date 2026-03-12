@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOperatorFlowStore } from '@/lib/operatorFlowStore';
+import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
 
