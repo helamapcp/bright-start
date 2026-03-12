@@ -82,7 +82,7 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
   };
 
   const exportBagTraceability = () => {
-    const rows = scopedRecords.map((record) => ({
+    const sourceRows = scopedRecords.map((record) => ({
       bag_code: record.bagCode,
       op_number: record.opNumber,
       machine: record.machineCode || record.machineName || '—',
@@ -90,8 +90,12 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
       raw_material_used: (record.rawMaterials || [])
         .map((material) => `${material.name} (${formatNumber(material.kg)}kg)`)
         .join('; '),
+      material: (record.rawMaterials || []).map((material) => material.name).join('; '),
       timestamp: record.createdAt,
     }));
+
+    const rows = applyExportPreset({ ...exportFilters, rows: sourceRows, dateField: 'timestamp' });
+    if (!rows.length) return toast.error('No traceability rows found for the selected preset.');
 
     exportRowsToExcel({ filePrefix: 'bag-traceability', sheetName: 'BagTraceability', rows });
     exportRowsToPdf({
