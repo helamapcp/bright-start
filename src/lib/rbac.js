@@ -38,7 +38,7 @@ const PAGE_ACCESS = {
     'PlanejamentoComposto',
   ],
   [ROLE_IDS.LOGISTICS_MANAGEMENT]: ['PATracking', 'Estoque', 'Dashboard'],
-  [ROLE_IDS.STOCK_OPERATOR]: ['Estoque', 'Dashboard', 'BagInventory', 'BagTransfer', 'FormulationPlanning', 'PlanejamentoComposto'],
+  [ROLE_IDS.STOCK_OPERATOR]: ['Estoque', 'BagInventory', 'BagTransfer', 'FormulationPlanning', 'PlanejamentoComposto'],
   [ROLE_IDS.MACHINE_OPERATOR]: ['MachineSelection', 'Production'],
 };
 
