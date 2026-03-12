@@ -22,6 +22,14 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
     rawMaterialKg: '',
     notes: '',
   });
+  const [exportFilters, setExportFilters] = useState({
+    preset: 'all',
+    startDate: '',
+    endDate: '',
+    opNumber: '',
+    machine: '',
+    material: '',
+  });
 
   const scopedRecords = useMemo(
     () =>
