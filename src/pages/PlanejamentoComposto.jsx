@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit, Trash2, FlaskConical, Scale, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, FlaskConical, Scale, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 function IngredienteRow({ ingrediente, materiais, onChange, onRemove }) {
@@ -333,12 +335,19 @@ export default function PlanejamentoComposto() {
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                            <FlaskConical className="w-6 h-6 text-amber-600" />
-                            Planejamento de Composto
-                        </h1>
-                        <p className="text-slate-500 mt-0.5">Gerencie as formulações de composto PVC</p>
+                    <div className="flex items-center gap-2">
+                        <Link to={createPageUrl('FormulationPlanning')}>
+                            <Button variant="outline" size="icon" aria-label="Voltar para Programação PMP">
+                                <ArrowLeft className="w-4 h-4" />
+                            </Button>
+                        </Link>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                <FlaskConical className="w-6 h-6 text-amber-600" />
+                                Planejamento de Composto
+                            </h1>
+                            <p className="text-slate-500 mt-0.5">Gerencie as formulações de composto PVC</p>
+                        </div>
                     </div>
                     <Button onClick={handleNew} className="bg-amber-600 hover:bg-amber-700">
                         <Plus className="w-4 h-4 mr-2" />
