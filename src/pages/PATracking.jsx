@@ -94,19 +94,19 @@ export default function PATracking() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               {FLOW_STEPS.map((step, index) => (
                 <React.Fragment key={step.key}>
                   <Link to={createPageUrl(step.page)}>
                     <div className={cn(
-                      'rounded-lg border p-3 text-sm transition-colors hover:bg-muted',
+                      'rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-muted',
                       step.key === 'pa' ? 'border-primary bg-primary/10 font-semibold' : 'border-border'
                     )}>
                       {step.label}
                     </div>
                   </Link>
                   {index < FLOW_STEPS.length - 1 && (
-                    <div className="hidden md:flex items-center justify-center text-muted-foreground">→</div>
+                    <div className="text-muted-foreground px-1">→</div>
                   )}
                 </React.Fragment>
               ))}
