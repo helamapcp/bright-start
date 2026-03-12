@@ -29,7 +29,7 @@ const navItems = [
   { name: 'PA Tracking', icon: Truck, page: 'PATracking' },
   { name: 'Fábrica', icon: Warehouse, page: 'FactoryDashboard' },
   { name: 'Estoque', icon: Boxes, page: 'Estoque' },
-  { name: 'Formulation Planning', icon: FlaskConical, page: 'FormulationPlanning' },
+  { name: 'Programação PMP', icon: FlaskConical, page: 'FormulationPlanning' },
   { name: 'Histórico Consumo', icon: History, page: 'ConsumptionHistory' },
   { name: 'Configurações', icon: Settings, page: 'Settings' },
 ];
