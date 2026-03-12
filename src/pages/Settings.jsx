@@ -899,6 +899,10 @@ export default function Settings() {
                             <Users className="w-4 h-4" />
                             Usuários
                         </TabsTrigger>
+                        <TabsTrigger value="log" className="flex items-center gap-1.5">
+                            <ClipboardList className="w-4 h-4" />
+                            Log
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* Machines Tab */}
