@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useUsersStore } from '@/lib/userStore';
 import { useInventoryStore } from '@/lib/inventoryStore';
 import { computeScheduledSuggestions, useOperatorFlowStore } from '@/lib/operatorFlowStore';
-import { exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
+import { applyExportPreset, exportRowsToExcel, exportRowsToPdf } from '@/lib/flowExport';
 import TransferTimeline from '@/components/estoque/TransferTimeline';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
