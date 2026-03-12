@@ -62,6 +62,7 @@ import PlanejamentoComposto from './pages/PlanejamentoComposto';
 import Production from './pages/Production';
 import Produtos from './pages/Produtos';
 import Settings from './pages/Settings';
+import FormulationPlanning from './pages/FormulationPlanning';
 import __Layout from './Layout.jsx';
 
 
