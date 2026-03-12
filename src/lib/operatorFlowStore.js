@@ -513,8 +513,19 @@ export const useOperatorFlowStore = () => {
     return { order, request };
   };
 
-  const appendTransferEvent = ({ requestId, action, location, userName, details, timestamp }) => {
+  const appendTransferEvent = ({ requestId, action, location, userName, details, timestamp, eventType }) => {
     if (!requestId || !action) return;
+
+    const normalizedAction = String(action).toLowerCase();
+    const inferredType =
+      eventType ||
+      (normalizedAction.includes('stock transfer posted')
+        ? 'stock_transfer_posted'
+        : normalizedAction.includes('materials received')
+          ? 'material_received'
+          : normalizedAction.includes('separation completed')
+            ? 'separation_completed'
+            : 'other');
 
     setState((prev) => ({
       ...prev,
@@ -526,6 +537,7 @@ export const useOperatorFlowStore = () => {
           userName,
           details,
           timestamp,
+          eventType: inferredType,
         }),
         ...(prev.transferEvents || []),
       ],
