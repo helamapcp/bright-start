@@ -323,6 +323,28 @@ export default function StockOperatorFlowPanel() {
     }
   };
 
+  const handleExportFilterChange = (key, value) => {
+    setExportFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const getAlertBadgeVariant = (severity) => {
+    if (severity === 'error') return 'destructive';
+    if (severity === 'warn') return 'secondary';
+    return 'outline';
+  };
+
+  const openAlertRecord = (alert) => {
+    if (alert?.recordType === 'transfer' && alert?.recordId) {
+      setSelectedTransferId(alert.recordId);
+    }
+
+    if (alert?.anchorId) {
+      document.getElementById(alert.anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const buildExportedRows = (rows, dateField) => applyExportPreset({ ...exportFilters, rows, dateField });
+
   const exportTransferRequests = () => {
     const rows = transferRequests.map((request) => ({
       transfer_id: request.id,
