@@ -904,7 +904,7 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="separation-orders-section">
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
