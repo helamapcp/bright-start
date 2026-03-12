@@ -206,7 +206,7 @@ export const useUsersStore = () => {
 
     if (currentUserId === userId) {
       const nextActive = users.find((user) => user.id !== userId && user.active !== false);
-      setCurrentUserId(nextActive?.id || 'local-user-1');
+      setCurrentUserId(nextActive?.id || 'local-user-admin');
     }
 
     return target;
