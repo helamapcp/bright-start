@@ -43,7 +43,8 @@ import {
 } from "@/components/ui/table";
 import {
     Plus, Edit, Trash2, Factory, Clock, AlertTriangle,
-    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical, ClipboardList
+    Package, Settings as SettingsIcon, Search, ToggleLeft, SlidersHorizontal, Upload, Users, FlaskConical, ClipboardList,
+    ChevronRight, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
