@@ -416,6 +416,78 @@ export default function StockOperatorFlowPanel() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">End-to-end flow validation</CardTitle>
+          <CardDescription>Checks conversion, leftovers, stock balances, and OP/bag traceability links.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            {consistencyReport.ok ? (
+              <Badge variant="secondary">Flow consistent</Badge>
+            ) : (
+              <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Issues found</Badge>
+            )}
+            <span className="text-muted-foreground">{new Date(consistencyReport.checkedAt).toLocaleString('pt-BR')}</span>
+          </div>
+          {!consistencyReport.ok && (
+            <div className="rounded-md border border-border bg-muted p-3 text-xs space-y-1">
+              {consistencyReport.issues.map((issue) => (
+                <p key={issue} className="text-muted-foreground">• {issue}</p>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mixer capacity rules (PMP)</CardTitle>
+          <CardDescription>Requests PCP → PMP are blocked if OP load exceeds configured capacity.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {mixerConfigList.map((config) => {
+            const draft = mixerDrafts[config.mixerName] || {};
+            const maxKg = draft.maxKg ?? config.maxKg;
+            const mode = draft.mode ?? config.mode;
+
+            return (
+              <div key={config.mixerName} className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-md border border-border p-3">
+                <div>
+                  <Label>Mixer</Label>
+                  <Input value={config.mixerName} readOnly />
+                </div>
+                <div>
+                  <Label>Max capacity (kg)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={maxKg}
+                    onChange={(event) => updateMixerDraft(config.mixerName, { maxKg: event.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Rule mode</Label>
+                  <Select value={mode} onValueChange={(value) => updateMixerDraft(config.mixerName, { mode: value })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="operation">Per operation</SelectItem>
+                      <SelectItem value="batch">Per batch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button variant="outline" className="w-full" onClick={() => saveMixerConfig(config)}>
+                    Save rule
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Stock snapshot by location</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
