@@ -101,6 +101,25 @@ export default function StockOperatorFlowPanel() {
     [mixerConfigs]
   );
 
+  const mixerUtilization = useMemo(() => {
+    return mixerConfigList.map((config) => {
+      const scheduledKg = transferRequests
+        .filter((request) => request.destinationLocation === 'PMP' && normalizeLocation(request.mixer) === normalizeLocation(config.mixerName))
+        .reduce((sum, request) => sum + Number(request.totalRequiredKg || request.totalKg || 0), 0);
+
+      const capacityKg = Number(config.maxKg || 0);
+      const utilizationPct = capacityKg > 0 ? (scheduledKg / capacityKg) * 100 : 0;
+      return {
+        mixerName: config.mixerName,
+        capacityKg,
+        scheduledKg,
+        utilizationPct,
+        remainingKg: capacityKg - scheduledKg,
+        overload: scheduledKg > capacityKg && capacityKg > 0,
+      };
+    });
+  }, [mixerConfigList, transferRequests]);
+
   const consistencyReport = useMemo(
     () => validateFlowConsistency(summaryByLocation),
     [summaryByLocation, validateFlowConsistency, transferRequests, separationOrders, generatedOps, bagTraceability]
