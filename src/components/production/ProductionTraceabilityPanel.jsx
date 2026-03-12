@@ -106,7 +106,12 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Machine traceability by OP and bag</CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base">Machine traceability by OP and bag</CardTitle>
+          <Button size="sm" variant="outline" onClick={exportBagTraceability}>
+            <Download className="w-4 h-4 mr-2" /> Export traceability
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
