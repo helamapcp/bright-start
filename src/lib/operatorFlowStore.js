@@ -403,12 +403,14 @@ export const useOperatorFlowStore = () => {
         userName,
         location: request.sourceLocation,
         action: `Separation order generated (${order.id.slice(0, 8)})`,
+        eventType: 'separation_order_created',
       }),
       buildTransferEvent({
         requestId,
         userName,
         location: request.sourceLocation,
         action: 'Separation started',
+        eventType: 'separation_started',
       }),
     ];
 
