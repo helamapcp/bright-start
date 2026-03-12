@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
-  authenticateFrontendUser,
   ACTIVE_USER_STORAGE_KEY,
   USERS_STORAGE_KEY,
   readUsers,
@@ -92,16 +91,6 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const localUser = authenticateFrontendUser(form);
-      if (localUser) {
-        window.localStorage.setItem(ACTIVE_USER_STORAGE_KEY, localUser.id);
-        window.dispatchEvent(new CustomEvent(USERS_EVENT));
-        setFrontendAuthSession({ userId: localUser.id, role: localUser.role, email: localUser.email });
-        toast.success(`Logged in as ${localUser.full_name}.`);
-        navigate(createPageUrl(HOME_BY_ROLE[localUser.role] || 'Dashboard'), { replace: true });
-        return;
-      }
-
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: String(form.email || '').trim(),
         password: String(form.password || ''),
