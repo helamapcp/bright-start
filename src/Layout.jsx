@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     LayoutDashboard, Factory, Package, Settings, LogOut,
-    Menu, X, ChevronRight, Warehouse, History, Boxes, FlaskConical
+    Menu, X, ChevronRight, Warehouse, History, Boxes, FlaskConical, Truck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
     { name: 'Produção', icon: Factory, page: 'MachineSelection' },
     { name: 'Ordens', icon: Package, page: 'Orders' },
+    { name: 'PA Tracking', icon: Truck, page: 'PATracking' },
     { name: 'Fábrica', icon: Warehouse, page: 'FactoryDashboard' },
     { name: 'Estoque', icon: Boxes, page: 'Estoque' },
     { name: 'Planej. Composto', icon: FlaskConical, page: 'PlanejamentoComposto' },
