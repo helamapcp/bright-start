@@ -866,7 +866,7 @@ export default function Settings() {
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-8 w-full max-w-5xl">
+                    <TabsList className="grid grid-cols-9 w-full max-w-6xl">
                         <TabsTrigger value="machines" className="flex items-center gap-1.5">
                             <Factory className="w-4 h-4" />
                             Máquinas
