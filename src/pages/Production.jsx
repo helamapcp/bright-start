@@ -22,6 +22,7 @@ import TelhaEntryModal from "@/components/production/TelhaEntryModal";
 import ForroEntryModal from "@/components/production/ForroEntryModal";
 import WeightSampleModal from "@/components/production/WeightSampleModal";
 import PedidoInterruptModal from "@/components/production/PedidoInterruptModal";
+import ProductionTraceabilityPanel from '@/components/production/ProductionTraceabilityPanel';
 
 // Função auxiliar para label de peso médio por categoria
 function pesoMedioLabel(cat) {
