@@ -359,7 +359,7 @@ export default function PATracking() {
                               </Button>
                             )}
                             {item.status === 'in_logistics' && (
-                              <Button size="sm" variant="outline" onClick={() => markAsDelivered(item.id)}>
+                              <Button size="sm" variant="outline" onClick={() => markAsDelivered(item.id)} disabled={!canManageLogistics}>
                                 <CheckCircle2 className="w-4 h-4 mr-1" /> Marcar entregue
                               </Button>
                             )}
