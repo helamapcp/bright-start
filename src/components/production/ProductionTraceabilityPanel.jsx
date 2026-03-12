@@ -125,8 +125,18 @@ export default function ProductionTraceabilityPanel({ machine, order, operatorNa
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <CardContent className="space-y-4" id="bag-traceability-section">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-2">
+          <div className="space-y-1">
+            <Label>Preset</Label>
+            <Input value={exportFilters.preset} onChange={(event) => setExportFilters((prev) => ({ ...prev, preset: event.target.value || 'all' }))} placeholder="all | last7 | last30" />
+          </div>
+          <div className="space-y-1"><Label>OP</Label><Input value={exportFilters.opNumber} onChange={(event) => setExportFilters((prev) => ({ ...prev, opNumber: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Machine</Label><Input value={exportFilters.machine} onChange={(event) => setExportFilters((prev) => ({ ...prev, machine: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Material</Label><Input value={exportFilters.material} onChange={(event) => setExportFilters((prev) => ({ ...prev, material: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>Start</Label><Input type="date" value={exportFilters.startDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, startDate: event.target.value }))} /></div>
+          <div className="space-y-1"><Label>End</Label><Input type="date" value={exportFilters.endDate} onChange={(event) => setExportFilters((prev) => ({ ...prev, endDate: event.target.value }))} /></div>
+        </div>
           <div className="space-y-1.5">
             <Label>Bag code</Label>
             <Input
