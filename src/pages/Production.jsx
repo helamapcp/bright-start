@@ -554,14 +554,25 @@ export default function Production() {
                                 </Badge>
                             )}
                         </div>
-                        {session && (
-                            <Button variant="outline" size="sm"
-                                onClick={() => endSession.mutate()} disabled={endSession.isPending}
-                                className="text-red-600 border-red-200 hover:bg-red-50 h-10">
-                                <Square className="w-4 h-4 mr-2" />
-                                Encerrar Sessão
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(createPageUrl('PATracking'))}
+                                className="h-10"
+                            >
+                                <Truck className="w-4 h-4 mr-2" />
+                                Ir para PA
                             </Button>
-                        )}
+                            {session && (
+                                <Button variant="outline" size="sm"
+                                    onClick={() => endSession.mutate()} disabled={endSession.isPending}
+                                    className="text-red-600 border-red-200 hover:bg-red-50 h-10">
+                                    <Square className="w-4 h-4 mr-2" />
+                                    Encerrar Sessão
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
