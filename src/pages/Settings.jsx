@@ -688,6 +688,27 @@ export default function Settings() {
         machines.filter((machine) => normalizeCategoryName(machine.type || '') === normalizeCategoryName(categoryName)).length
     );
 
+    const logLocations = useMemo(() => {
+        const unique = new Set(systemLogs.map((log) => log.location).filter(Boolean));
+        return Array.from(unique.values());
+    }, [systemLogs]);
+
+    const filteredLogs = useMemo(() => {
+        return systemLogs.filter((log) => {
+            const timestamp = new Date(log.timestamp);
+            const fromOk = !logDateFrom || timestamp >= new Date(`${logDateFrom}T00:00:00`);
+            const toOk = !logDateTo || timestamp <= new Date(`${logDateTo}T23:59:59`);
+            const userOk = logUserFilter === 'all' || log.user_name === logUserFilter;
+            const actionOk = logActionFilter === 'all' || log.action_type === logActionFilter;
+            const locationOk = logLocationFilter === 'all' || log.location === logLocationFilter;
+
+            const text = `${log.action || ''} ${log.user_name || ''} ${log.location || ''} ${JSON.stringify(log.parameters || {})}`.toLowerCase();
+            const searchOk = !logSearch.trim() || text.includes(logSearch.trim().toLowerCase());
+
+            return fromOk && toOk && userOk && actionOk && locationOk && searchOk;
+        });
+    }, [systemLogs, logDateFrom, logDateTo, logUserFilter, logActionFilter, logLocationFilter, logSearch]);
+
     const { data: shifts = [] } = useQuery({
         queryKey: ['settings-shifts'],
         queryFn: () => base44.entities.Shift.filter({ active: true })
