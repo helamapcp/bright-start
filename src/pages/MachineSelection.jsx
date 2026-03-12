@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Factory, RefreshCw, LogOut, Clock } from "lucide-react";
+import { Search, Factory, RefreshCw, Clock } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import MachineCard from "@/components/production/MachineCard";
 import ShiftSelector from "@/components/production/ShiftSelector";
 import { cn } from "@/lib/utils";
 import { normalizeRole, ROLE_IDS, getRoleLabel } from '@/lib/rbac';
 import { useUsersStore } from '@/lib/userStore';
-import { clearFrontendAuthSession } from '@/lib/frontendAuth';
 
 // Identifica turno atual baseado na hora
 function detectCurrentShift(shifts) {
@@ -79,10 +78,6 @@ export default function MachineSelection() {
         navigate(createPageUrl('Production') + `?machine=${selectedMachine.id}&shift=${shift.id}`);
     };
 
-    const handleLogout = () => {
-        clearFrontendAuthSession();
-        navigate('/login', { replace: true });
-    };
 
     const getMachineSession = (machineId) => {
         return sessions.find(s => s.machine_id === machineId);
@@ -128,9 +123,6 @@ export default function MachineSelection() {
                             )}
                             <Button variant="outline" size="icon" onClick={() => refetchMachines()}>
                                 <RefreshCw className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" onClick={handleLogout}>
-                                <LogOut className="w-4 h-4" />
                             </Button>
                         </div>
                     </div>
