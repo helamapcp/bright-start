@@ -550,7 +550,7 @@ export default function StockOperatorFlowPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="stock-summary-section">
         <CardHeader>
           <CardTitle className="text-base">Stock snapshot by location</CardTitle>
         </CardHeader>
