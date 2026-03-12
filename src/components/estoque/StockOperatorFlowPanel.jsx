@@ -24,6 +24,7 @@ const toDayKey = (dateLike) => {
 };
 
 const formatNumber = (value) => Number(value || 0).toFixed(2);
+const normalizeLocation = (value) => String(value || '').trim().toLowerCase();
 
 const buildMaterialOptionValue = (material) => `${material.id}::${material.nome}`;
 
