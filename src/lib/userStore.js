@@ -232,4 +232,19 @@ export const useUsersStore = () => {
   };
 };
 
+export const authenticateFrontendUser = ({ email, password }) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedPassword = String(password || '');
+  const users = readUsers();
+
+  return (
+    users.find(
+      (user) =>
+        user.active !== false &&
+        String(user.email || '').toLowerCase() === normalizedEmail &&
+        String(user.password || '') === normalizedPassword
+    ) || null
+  );
+};
+
 export { USERS_STORAGE_KEY, ACTIVE_USER_STORAGE_KEY };
