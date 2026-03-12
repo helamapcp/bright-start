@@ -155,6 +155,7 @@ export const useUsersStore = () => {
       id: makeId(),
       full_name: String(full_name || '').trim(),
       email: normalizedEmail,
+      password: 'test123',
       role: normalizeRole(role || ROLE_IDS.MACHINE_OPERATOR),
       active: true,
     };
