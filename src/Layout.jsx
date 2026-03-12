@@ -45,7 +45,8 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const handleLogout = () => {
-    window.location.href = '/';
+    clearFrontendAuthSession();
+    window.location.href = '/login';
   };
 
   const FACTORY_FLOOR_PAGES = ['Production', 'BagTransfer', 'MachineConsumption'];
