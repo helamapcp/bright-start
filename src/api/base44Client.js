@@ -1,12 +1,5 @@
 import { appendSystemLog } from '@/lib/systemLog';
-
-const mockUser = {
-  id: 'local-user-1',
-  full_name: 'Frontend Local',
-  email: 'frontend@local.dev',
-  role: 'admin',
-  active: true,
-};
+import { getCurrentUserSnapshot } from '@/lib/userStore';
 
 const entityStore = new Map();
 
@@ -34,13 +27,16 @@ const sortRows = (rows, orderBy) => {
   });
 };
 
+const getActor = () => getCurrentUserSnapshot();
+
 const logEntityAction = (actionType, entityName, parameters = {}) => {
+  const actor = getActor();
   appendSystemLog({
     action: `${actionType.toUpperCase()} ${entityName}`,
     action_type: actionType,
     location: 'SISTEMA',
-    user_id: mockUser.id,
-    user_name: mockUser.full_name,
+    user_id: actor?.id,
+    user_name: actor?.full_name,
     parameters,
   });
 };
@@ -107,7 +103,7 @@ const entitiesProxy = new Proxy(
 
 export const base44 = {
   auth: {
-    me: async () => ({ ...mockUser }),
+    me: async () => ({ ...getActor() }),
     isAuthenticated: async () => true,
     redirectToLogin: (nextUrl) => {
       if (typeof window !== 'undefined' && nextUrl) {
@@ -115,11 +111,12 @@ export const base44 = {
       }
     },
     logout: (redirectUrl) => {
+      const actor = getActor();
       appendSystemLog({
         action: 'Logout',
         action_type: 'auth',
-        user_id: mockUser.id,
-        user_name: mockUser.full_name,
+        user_id: actor?.id,
+        user_name: actor?.full_name,
         location: 'SISTEMA',
       });
       if (typeof window !== 'undefined' && redirectUrl) {
@@ -127,11 +124,12 @@ export const base44 = {
       }
     },
     loginWithProvider: async () => {
+      const actor = getActor();
       appendSystemLog({
         action: 'Login with provider',
         action_type: 'auth',
-        user_id: mockUser.id,
-        user_name: mockUser.full_name,
+        user_id: actor?.id,
+        user_name: actor?.full_name,
         location: 'SISTEMA',
       });
       return { success: true };

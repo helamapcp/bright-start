@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { appendSystemLog } from '@/lib/systemLog';
+import { canPerformAction } from '@/lib/rbac';
+import { useUsersStore } from '@/lib/userStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,6 +100,9 @@ function mergeWithPersistedData(baseItems) {
 }
 
 export default function PATracking() {
+  const { currentUser } = useUsersStore();
+  const canManageLogistics = canPerformAction(currentUser?.role, 'logistics.manage');
+
   const [items, setItems] = useState([]);
   const [transferDrafts, setTransferDrafts] = useState({});
 
@@ -122,6 +127,11 @@ export default function PATracking() {
   };
 
   const confirmTransfer = (item) => {
+    if (!canManageLogistics) {
+      toast.error('Your role has read-only access in Logistics.');
+      return;
+    }
+
     const qty = Number(transferDrafts[item.id]);
     if (!Number.isFinite(qty) || qty <= 0) {
       toast.error('Informe uma quantidade válida para transferir.');
@@ -167,6 +177,11 @@ export default function PATracking() {
   };
 
   const markAsDelivered = (id) => {
+    if (!canManageLogistics) {
+      toast.error('Your role has read-only access in Logistics.');
+      return;
+    }
+
     const target = items.find((row) => row.id === id);
     const now = new Date().toISOString();
     setItems((prev) =>
@@ -222,6 +237,11 @@ export default function PATracking() {
           <p className="text-sm text-muted-foreground">
             Transferência controlada de PA com confirmação manual de quantidade, cálculo automático para FORRO e registro de horário.
           </p>
+          {!canManageLogistics && (
+            <div className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+              Read-only mode for your current role in Logistics.
+            </div>
+          )}
         </div>
 
         <Card>
@@ -323,7 +343,7 @@ export default function PATracking() {
                             step="0.01"
                             value={transferDrafts[item.id] ?? ''}
                             onChange={(e) => setDraft(item.id, e.target.value)}
-                            disabled={item.status !== 'factory'}
+                            disabled={item.status !== 'factory' || !canManageLogistics}
                             placeholder={item.status === 'factory' ? 'Ex: 120' : Number(item.transfer_qty || 0).toString()}
                           />
                         </TableCell>
@@ -334,12 +354,12 @@ export default function PATracking() {
                         <TableCell>
                           <div className="flex justify-end gap-2">
                             {item.status === 'factory' && (
-                              <Button size="sm" onClick={() => confirmTransfer(item)}>
+                              <Button size="sm" onClick={() => confirmTransfer(item)} disabled={!canManageLogistics}>
                                 <Truck className="w-4 h-4 mr-1" /> Confirmar
                               </Button>
                             )}
                             {item.status === 'in_logistics' && (
-                              <Button size="sm" variant="outline" onClick={() => markAsDelivered(item.id)}>
+                              <Button size="sm" variant="outline" onClick={() => markAsDelivered(item.id)} disabled={!canManageLogistics}>
                                 <CheckCircle2 className="w-4 h-4 mr-1" /> Marcar entregue
                               </Button>
                             )}
