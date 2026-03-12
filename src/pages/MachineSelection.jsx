@@ -78,10 +78,6 @@ export default function MachineSelection() {
         navigate(createPageUrl('Production') + `?machine=${selectedMachine.id}&shift=${shift.id}`);
     };
 
-    const handleLogout = () => {
-        clearFrontendAuthSession();
-        navigate('/login', { replace: true });
-    };
 
     const getMachineSession = (machineId) => {
         return sessions.find(s => s.machine_id === machineId);
