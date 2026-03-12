@@ -1,1 +1,10 @@
 project_id = "vvygrjjtvvlhahcbgcia"
+
+[functions.createMaterialReception]
+verify_jwt = false
+
+[functions.requestTransfer]
+verify_jwt = false
+
+[functions.startProductionRun]
+verify_jwt = false
